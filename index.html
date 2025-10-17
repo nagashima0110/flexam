@@ -314,7 +314,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- モード選択画面 -->
         <div id="mode-select-screen">
             <h1>4択クイズアプリ</h1>
             <div class="mode-select">
@@ -329,7 +328,6 @@
             </div>
         </div>
 
-        <!-- 管理者ログイン画面 -->
         <div id="admin-login-screen" class="hidden">
             <h2>🔒 管理者ログイン</h2>
             <div class="form-group">
@@ -340,7 +338,6 @@
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
         </div>
 
-        <!-- 管理者設定画面 -->
         <div id="admin-screen" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h2>管理者設定</h2>
@@ -370,7 +367,6 @@
                 <p style="font-size: 12px; color: #666;">このコードを受験者に共有してください</p>
             </div>
         </div>
-        <!-- 受験者ログイン画面 -->
         <div id="user-login-screen" class="hidden">
             <h2>受験者ログイン</h2>
             <div class="form-group">
@@ -385,7 +381,6 @@
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
         </div>
 
-        <!-- クイズ画面 -->
         <div id="quiz-screen" class="hidden">
             <div class="question-card">
                 <div class="question-header">
@@ -402,7 +397,6 @@
             </div>
         </div>
 
-        <!-- 結果画面 -->
         <div id="result-screen" class="hidden">
             <h2>クイズ完了！</h2>
             <div class="result-box">
@@ -663,9 +657,27 @@
             return result;
         }
 
+        // **【追加】問題オブジェクトに選択肢の配列を作成しシャッフルする**
+        function processQuestionChoices(rawQuestion) {
+            const choices = [
+                { text: rawQuestion.correctAnswer, isCorrect: true },
+                { text: rawQuestion.option2, isCorrect: false },
+                { text: rawQuestion.option3, isCorrect: false },
+                { text: rawQuestion.option4, isCorrect: false }
+            ].filter(c => c.text.trim() !== ''); // 空の選択肢は除外
+
+            // 選択肢をシャッフル
+            shuffleArray(choices);
+
+            return {
+                ...rawQuestion,
+                choices: choices // 新しいプロパティとして追加
+            };
+        }
+
 
         // クイズ開始 (GASから設定を読み込み、認証を行う)
-        // 【置き換え】既存の startQuiz() 関数を、永続化コードの認証ロジックに完全に置き換えました
+        // 【修正】選択肢配列の生成処理を追加
         function startQuiz() {
             userName = document.getElementById('user-name').value.trim();
             const code = document.getElementById('access-code').value.trim();
@@ -717,13 +729,16 @@
                     return;
                 }
 
-                currentQuestions = shuffleArray(selectedQuestions);
+                // **【修正箇所】**
+                // 選択された問題群に対し、選択肢を整形・シャッフルしてから、全体をシャッフルしてセット
+                currentQuestions = shuffleArray(selectedQuestions.map(processQuestionChoices));
                 currentIndex = 0;
                 history = [];
                 
                 // 受験開始
                 showScreen('quiz-screen'); // クイズ画面へ遷移
-                document.getElementById('quiz-user-name').textContent = `受験者名: ${userName}`; // ユーザー名を更新
+                // 【修正】HTMLに 'quiz-user-name'がないため、代わりに'user-name-display'を使用
+                document.getElementById('user-name-display').textContent = `受験者: ${userName}`; 
                 displayQuestion(); // 最初の問題を表示
             })
             .catch(error => {

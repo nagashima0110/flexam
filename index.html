@@ -420,7 +420,7 @@
 <script>
         // グローバル変数
         // 【重要】Google Apps ScriptをWebアプリとしてデプロイして取得したURLをここに貼り付けてください
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyBEjYEk3RKorf0yuDAASBi8N2k6IxWJD_sZLNAVnaEN966akOUK2tf4pe5_pqCg2Hp/exec';
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxLZu8NCN1J9cUdGt_FhByoRC4pvds8CM4Purf1_E4xdjg3uTewaEtcEQCeECYRprE/exec';
         const ADMIN_PASSWORD = 'admin2024';
         // 【追加・要編集】ウェブに公開したGoogleスプレッドシートのCSV URLをここに設定
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv'; 
@@ -587,20 +587,18 @@
             }
         }
 
-        // アクセスコードの生成と永続化 (GASへ送信)
+        // アクセスコード生成（修正版）
         function generateAccessCode() {
             if (allQuestions.length === 0) {
-                alert('問題が読み込まれていません。Googleスプレッドシートから問題を読み込んでください。');
+                alert('問題が読み込まれていません。');
                 return;
             }
             if (distributionSettings.length === 0) {
-                alert('出題設定を一つ以上追加してください。');
+                alert('出題設定を追加してください。');
                 return;
             }
 
-            const code = generateRandomCode(); // 既存のコード生成関数
-
-            // 永続化のためのデータ構造を準備
+            const code = generateRandomCode();
             const settingsToSave = {
                 accessCode: code,
                 settings: distributionSettings.map(s => ({
@@ -609,39 +607,33 @@
                 }))
             };
 
-            // UIを更新
             document.getElementById('generate-code-btn').disabled = true;
             document.getElementById('generated-code').textContent = '送信中...';
             document.getElementById('access-code-display').classList.remove('hidden');
 
-            // データの永続化 (GAS APIへPOST送信)
-            fetch(GAS_API_URL, {
-                method: 'POST',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify(settingsToSave) // JSONとして送信
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // 成功した場合、画面を更新
-                    document.getElementById('generated-code').textContent = code;
-                    alert(`アクセスコード ${code} がサーバーに保存されました。`);
-                } else {
-                    document.getElementById('generated-code').textContent = '失敗';
-                    alert('アクセスコードの保存に失敗しました。GASのエラーを確認してください: ' + data.message);
-                }
-            })
-            .catch(error => {
-                document.getElementById('generated-code').textContent = '通信エラー';
-                console.error('GAS API Error:', error);
-                alert('サーバーとの通信に失敗しました。GASのデプロイURLを確認してください。');
-            })
-            .finally(() => {
-                document.getElementById('generate-code-btn').disabled = false;
-            });
+            // GETリクエストでデータを送信
+            const dataParam = encodeURIComponent(JSON.stringify(settingsToSave));
+            const url = `${GAS_API_URL}?action=save&data=${dataParam}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('generated-code').textContent = code;
+                        alert(`アクセスコード ${code} がサーバーに保存されました。`);
+                    } else {
+                        document.getElementById('generated-code').textContent = '失敗';
+                        alert('保存に失敗しました: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('generated-code').textContent = '通信エラー';
+                    console.error('GAS Error:', error);
+                    alert('通信エラーが発生しました: ' + error.message);
+                })
+                .finally(() => {
+                    document.getElementById('generate-code-btn').disabled = false;
+                });
         }
 
         // Helper function: Fisher-Yates shuffle
@@ -683,8 +675,7 @@
 
 
         // クイズ開始 (GASから設定を読み込み、認証を行う)
-        // 【置き換え】既存の startQuiz() 関数を、永続化コードの認証ロジックに完全に置き換えました
-        // 【修正】選択肢配列の生成処理を追加
+        // クイズ開始（修正版）
         function startQuiz() {
             userName = document.getElementById('user-name').value.trim();
             const code = document.getElementById('access-code').value.trim();
@@ -695,67 +686,54 @@
             }
 
             if (allQuestions.length === 0) {
-                alert('問題が読み込まれていません。管理者側で問題の読み込みが完了しているか確認してください。');
+                alert('問題が読み込まれていません。');
                 return;
             }
 
-            // GAS APIから永続化されたアクセスコードと設定を取得
-            fetch(GAS_API_URL, { method: 'GET', mode: 'cors' })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'error' || !data.accessCode) {
-                    alert('現在、有効なアクセスコードは設定されていません。管理者にお問い合わせください。');
-                    return;
-                }
+            // GASからアクセスコードと設定を取得
+            const url = `${GAS_API_URL}?action=load`;
 
-                // コードの比較
-                if (data.accessCode !== code) {
-                    alert('無効なアクセスコードです。管理者にお問い合わせください。');
-                    return;
-                }
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error' || !data.accessCode) {
+                        alert('現在、有効なアクセスコードは設定されていません。');
+                        return;
+                    }
 
-                // 認証成功: 永続化された設定を使って出題問題を生成
-                const savedDistributionSettings = data.settings;
+                    if (data.accessCode !== code) {
+                        alert('無効なアクセスコードです。');
+                        return;
+                    }
 
-                let selectedQuestions = [];
-                savedDistributionSettings.forEach(setting => {
-                    // 問題番号が一致するものをフィルタリング
-                    const filtered = allQuestions.filter(q => q.distributionNumber === setting.distribution);
-                    // 抽出した問題をシャッフルし、設定された問題数を取得
-                    const shuffled = shuffleArray([...filtered]);
-                    selectedQuestions.push(...shuffled.slice(0, setting.count));
+                    // 認証成功：問題を生成
+                    const savedSettings = data.settings;
+                    let selectedQuestions = [];
+
+                    savedSettings.forEach(setting => {
+                        const filtered = allQuestions.filter(q => q.distributionNumber === setting.distribution);
+                        const shuffled = shuffleArray([...filtered]);
+                        selectedQuestions.push(...shuffled.slice(0, setting.count));
+                    });
+
+                    if (selectedQuestions.length === 0) {
+                        alert('出題問題が0問になりました。');
+                        return;
+                    }
+
+                    currentQuestions = shuffleArray(selectedQuestions.map(processQuestionChoices));
+                    currentIndex = 0;
+                    history = [];
+
+                    showScreen('quiz-screen');
+                    document.getElementById('user-name-display').textContent = `受験者: ${userName}`;
+                    displayQuestion();
+                })
+                .catch(error => {
+                    console.error('GAS Error:', error);
+                    alert('サーバーからデータを取得できませんでした: ' + error.message);
                 });
-
-                if (selectedQuestions.length === 0) {
-                    alert('サーバーに保存された設定では、出題問題が0問になりました。管理者にご確認ください。');
-                    return;
-                }
-
-                currentQuestions = shuffleArray(selectedQuestions);
-                // **【修正箇所】**
-                // 選択された問題群に対し、選択肢を整形・シャッフルしてから、全体をシャッフルしてセット
-                currentQuestions = shuffleArray(selectedQuestions.map(processQuestionChoices));
-                currentIndex = 0;
-                history = [];
-
-                // 受験開始
-                showScreen('quiz-screen'); // クイズ画面へ遷移
-                document.getElementById('quiz-user-name').textContent = `受験者名: ${userName}`; // ユーザー名を更新
-                // 【修正】HTMLに 'quiz-user-name'がないため、代わりに'user-name-display'を使用
-                document.getElementById('user-name-display').textContent = `受験者: ${userName}`; 
-                displayQuestion(); // 最初の問題を表示
-            })
-            .catch(error => {
-                console.error('GAS API Error:', error);
-                alert('サーバーからアクセスコードを取得できませんでした。ネットワークまたは設定を確認してください。');
-            });
         }
-
 
         // 問題表示
         function displayQuestion() {
@@ -904,6 +882,28 @@
             currentIndex = 0;
             history = [];
             showModeSelect();
+        }
+        function generateAccessCode() {
+            // ... 既存のチェック処理 ...
+            
+            const code = generateRandomCode();
+            const settingsToSave = {
+                accessCode: code,
+                settings: distributionSettings
+            };
+            
+            // GETパラメータで送信（CORS回避）
+            const params = encodeURIComponent(JSON.stringify(settingsToSave));
+            const url = `${GAS_API_URL}?action=save&data=${params}`;
+            
+            fetch(url, { method: 'GET' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('generated-code').textContent = code;
+                        alert(`アクセスコード ${code} が保存されました`);
+                    }
+                });
         }
     </script>
 </body>

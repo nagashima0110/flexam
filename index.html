@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4択クイズアプリ</title>
-//    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -111,8 +110,13 @@
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #5568d3;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
 
         .btn-success {
@@ -139,25 +143,6 @@
             color: white;
             padding: 8px 16px;
             width: auto;
-        }
-
-        .upload-area {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            background: #f8f9fa;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #f0f2ff;
-        }
-
-        .upload-area input[type="file"] {
-            display: none;
         }
 
         .distribution-list {
@@ -298,11 +283,6 @@
             margin-top: 10px;
         }
 
-        .icon {
-            width: 24px;
-            height: 24px;
-        }
-
         .btn-add {
             background: #28a745;
             color: white;
@@ -350,7 +330,7 @@
             <div class="form-group">
                 <label>問題データ読み込み</label>
                 <button class="btn btn-success" onclick="loadQuestionsFromSheet()">Googleスプレッドシートから読み込む</button>
-                <div id="upload-success" class="success-message hidden" style="margin-top: 10px;"></div>
+                <div id="upload-success" class="success-message hidden"></div>
             </div>
 
             <div id="distribution-settings" class="hidden">
@@ -363,13 +343,14 @@
             </div>
 
             <button id="generate-code-btn" class="btn btn-primary hidden" onclick="generateAccessCode()">アクセスコードを生成</button>
-
+            
             <div id="access-code-display" class="access-code-display hidden">
                 <p>生成されたアクセスコード:</p>
                 <div class="code" id="generated-code"></div>
                 <p style="font-size: 12px; color: #666;">このコードを受験者に共有してください</p>
             </div>
         </div>
+
         <!-- 受験者ログイン画面 -->
         <div id="user-login-screen" class="hidden">
             <h2>受験者ログイン</h2>
@@ -417,16 +398,14 @@
         </div>
     </div>
 
-<script>
+    <script>
         // グローバル変数
-        // 【重要】Google Apps ScriptをWebアプリとしてデプロイして取得したURLをここに貼り付けてください
         const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxLZu8NCN1J9cUdGt_FhByoRC4pvds8CM4Purf1_E4xdjg3uTewaEtcEQCeECYRprE/exec';
         const ADMIN_PASSWORD = 'admin2024';
-        // 【追加・要編集】ウェブに公開したGoogleスプレッドシートのCSV URLをここに設定
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv'; 
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv';
+        
         let allQuestions = [];
         let distributionSettings = [];
-        let quizConfig = null;
         let currentQuestions = [];
         let currentIndex = 0;
         let history = [];
@@ -435,28 +414,17 @@
         // 画面表示関数
         function showScreen(screenId) {
             const screens = ['mode-select-screen', 'admin-login-screen', 'admin-screen', 'user-login-screen', 'quiz-screen', 'result-screen'];
-            screens.forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        function showModeSelect() {
-            showScreen('mode-select-screen');
-        }
-
-        function showAdminLogin() {
-            showScreen('admin-login-screen');
-        }
-
-        function showUserLogin() {
-            showScreen('user-login-screen');
-        }
+        function showModeSelect() { showScreen('mode-select-screen'); }
+        function showAdminLogin() { showScreen('admin-login-screen'); }
+        function showUserLogin() { showScreen('user-login-screen'); }
 
         // 管理者ログイン
         function adminLogin() {
-            const password = document.getElementById('admin-password').value;
-            if (password === ADMIN_PASSWORD) {
+            if (document.getElementById('admin-password').value === ADMIN_PASSWORD) {
                 showScreen('admin-screen');
             } else {
                 alert('パスワードが間違っています');
@@ -468,18 +436,10 @@
             showModeSelect();
         }
 
-        // CSVファイル読み込み 
-        // 【置き換え】元の handleFileUpload を削除し、loadQuestionsFromSheet に置き換えました
+        // Googleスプレッドシートから問題読み込み
         function loadQuestionsFromSheet() {
-            const url = GOOGLE_SHEET_CSV_URL;
-
-            if (!url.startsWith('http')) {
-                alert('エラー: GoogleスプレッドシートのURLが設定されていません。');
-                return;
-            }
-
-            Papa.parse(url, {
-                download: true, // URLからのダウンロードを有効にする
+            Papa.parse(GOOGLE_SHEET_CSV_URL, {
+                download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
@@ -495,15 +455,15 @@
                             option4: (row['選択肢4'] || '').trim(),
                             explanation: (row['解説'] || '解説はありません').trim()
                         }));
-
-                    document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み（Google Sheetから）`;
+                    
+                    document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み`;
                     document.getElementById('upload-success').classList.remove('hidden');
                     document.getElementById('distribution-settings').classList.remove('hidden');
                     updateDistributionList();
                 },
-                error: function(error, file) {
-                    console.error("PapaParse Error:", error, file);
-                    alert('Googleスプレッドシートからのデータ読み込みに失敗しました。URLを確認し、ウェブに公開されているか確認してください。');
+                error: function(error) {
+                    console.error("Error:", error);
+                    alert('データ読み込みに失敗しました');
                 }
             });
         }
@@ -520,29 +480,29 @@
         }
 
         function updateDistributionList() {
-            const availableDistributions = [...new Set(allQuestions.map(q => q.distributionNumber))].sort();
+            const distributions = [...new Set(allQuestions.map(q => q.distributionNumber))].sort();
             const listDiv = document.getElementById('distribution-list');
-
+            
             listDiv.innerHTML = '';
             distributionSettings.forEach((setting, index) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'distribution-item';
-
+                const div = document.createElement('div');
+                div.className = 'distribution-item';
+                
                 const select = document.createElement('select');
                 select.innerHTML = '<option value="">Distribution番号を選択</option>';
-                availableDistributions.forEach(dist => {
+                distributions.forEach(dist => {
                     const count = allQuestions.filter(q => q.distributionNumber === dist).length;
-                    const option = document.createElement('option');
-                    option.value = dist;
-                    option.textContent = `${dist} (${count}問)`;
-                    if (dist === setting.distribution) option.selected = true;
-                    select.appendChild(option);
+                    const opt = document.createElement('option');
+                    opt.value = dist;
+                    opt.textContent = `${dist} (${count}問)`;
+                    if (dist === setting.distribution) opt.selected = true;
+                    select.appendChild(opt);
                 });
                 select.onchange = (e) => {
                     distributionSettings[index].distribution = e.target.value;
                     updateTotalQuestions();
                 };
-
+                
                 const input = document.createElement('input');
                 input.type = 'number';
                 input.min = 1;
@@ -551,22 +511,19 @@
                     distributionSettings[index].count = parseInt(e.target.value) || 1;
                     updateTotalQuestions();
                 };
-
+                
                 const span = document.createElement('span');
                 span.textContent = '問';
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-danger';
-                deleteBtn.textContent = '🗑️';
-                deleteBtn.onclick = () => removeDistribution(index);
-
-                itemDiv.appendChild(select);
-                itemDiv.appendChild(input);
-                itemDiv.appendChild(span);
-                itemDiv.appendChild(deleteBtn);
-                listDiv.appendChild(itemDiv);
+                
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-danger';
+                btn.textContent = '🗑️';
+                btn.onclick = () => removeDistribution(index);
+                
+                div.append(select, input, span, btn);
+                listDiv.appendChild(div);
             });
-
+            
             updateTotalQuestions();
         }
 
@@ -575,239 +532,170 @@
                 const available = allQuestions.filter(q => q.distributionNumber === s.distribution).length;
                 return sum + Math.min(s.count, available);
             }, 0);
-
-            const totalDiv = document.getElementById('total-questions');
+            
+            const div = document.getElementById('total-questions');
             if (total > 0) {
-                totalDiv.textContent = `合計出題数: ${total}問`;
-                totalDiv.classList.remove('hidden');
+                div.textContent = `合計出題数: ${total}問`;
+                div.classList.remove('hidden');
                 document.getElementById('generate-code-btn').classList.remove('hidden');
             } else {
-                totalDiv.classList.add('hidden');
+                div.classList.add('hidden');
                 document.getElementById('generate-code-btn').classList.add('hidden');
             }
         }
 
-        // アクセスコード生成（修正版）
+        // アクセスコード生成
         function generateAccessCode() {
-            if (allQuestions.length === 0) {
-                alert('問題が読み込まれていません。');
-                return;
-            }
-            if (distributionSettings.length === 0) {
-                alert('出題設定を追加してください。');
+            if (allQuestions.length === 0 || distributionSettings.length === 0) {
+                alert('問題を読み込み、出題設定を追加してください');
                 return;
             }
 
-            const code = generateRandomCode();
-            const settingsToSave = {
+            const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const data = {
                 accessCode: code,
-                settings: distributionSettings.map(s => ({
-                    distribution: s.distribution,
-                    count: s.count
-                }))
+                settings: distributionSettings.map(s => ({ distribution: s.distribution, count: s.count }))
             };
 
             document.getElementById('generate-code-btn').disabled = true;
             document.getElementById('generated-code').textContent = '送信中...';
             document.getElementById('access-code-display').classList.remove('hidden');
 
-            // GETリクエストでデータを送信
-            const dataParam = encodeURIComponent(JSON.stringify(settingsToSave));
-            const url = `${GAS_API_URL}?action=save&data=${dataParam}`;
+            const url = `${GAS_API_URL}?action=save&data=${encodeURIComponent(JSON.stringify(data))}`;
 
             fetch(url)
                 .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
+                .then(result => {
+                    if (result.status === 'success') {
                         document.getElementById('generated-code').textContent = code;
-                        alert(`アクセスコード ${code} がサーバーに保存されました。`);
+                        alert(`アクセスコード ${code} が保存されました`);
                     } else {
-                        document.getElementById('generated-code').textContent = '失敗';
-                        alert('保存に失敗しました: ' + data.message);
+                        throw new Error(result.message);
                     }
                 })
                 .catch(error => {
-                    document.getElementById('generated-code').textContent = '通信エラー';
-                    console.error('GAS Error:', error);
-                    alert('通信エラーが発生しました: ' + error.message);
+                    document.getElementById('generated-code').textContent = 'エラー';
+                    alert('保存に失敗しました: ' + error.message);
                 })
                 .finally(() => {
                     document.getElementById('generate-code-btn').disabled = false;
                 });
         }
 
-        // Helper function: Fisher-Yates shuffle
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        // Helper function: ランダムな6文字のコードを生成
-        function generateRandomCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
-        // **【追加】問題オブジェクトに選択肢の配列を作成しシャッフルする**
-        function processQuestionChoices(rawQuestion) {
-            const choices = [
-                { text: rawQuestion.correctAnswer, isCorrect: true },
-                { text: rawQuestion.option2, isCorrect: false },
-                { text: rawQuestion.option3, isCorrect: false },
-                { text: rawQuestion.option4, isCorrect: false }
-            ].filter(c => c.text.trim() !== ''); // 空の選択肢は除外
-
-            // 選択肢をシャッフル
-            shuffleArray(choices);
-
-            return {
-                ...rawQuestion,
-                choices: choices // 新しいプロパティとして追加
-            };
-        }
-
-
-        // クイズ開始 (GASから設定を読み込み、認証を行う)
-        // クイズ開始（修正版）
+        // クイズ開始
         function startQuiz() {
             userName = document.getElementById('user-name').value.trim();
             const code = document.getElementById('access-code').value.trim();
 
             if (!userName || !code) {
-                alert('名前とアクセスコードを入力してください。');
+                alert('名前とアクセスコードを入力してください');
                 return;
             }
 
             if (allQuestions.length === 0) {
-                alert('問題が読み込まれていません。');
+                alert('問題が読み込まれていません');
                 return;
             }
 
-            // GASからアクセスコードと設定を取得
-            const url = `${GAS_API_URL}?action=load`;
-
-            fetch(url)
+            fetch(`${GAS_API_URL}?action=load`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'error' || !data.accessCode) {
-                        alert('現在、有効なアクセスコードは設定されていません。');
+                        alert('有効なアクセスコードが設定されていません');
                         return;
                     }
 
                     if (data.accessCode !== code) {
-                        alert('無効なアクセスコードです。');
+                        alert('無効なアクセスコードです');
                         return;
                     }
 
-                    // 認証成功：問題を生成
-                    const savedSettings = data.settings;
-                    let selectedQuestions = [];
-
-                    savedSettings.forEach(setting => {
-                        const filtered = allQuestions.filter(q => q.distributionNumber === setting.distribution);
-                        const shuffled = shuffleArray([...filtered]);
-                        selectedQuestions.push(...shuffled.slice(0, setting.count));
+                    // 問題を生成
+                    let selected = [];
+                    data.settings.forEach(s => {
+                        const filtered = allQuestions.filter(q => q.distributionNumber === s.distribution);
+                        const shuffled = filtered.sort(() => Math.random() - 0.5);
+                        selected.push(...shuffled.slice(0, s.count));
                     });
 
-                    if (selectedQuestions.length === 0) {
-                        alert('出題問題が0問になりました。');
-                        return;
-                    }
+                    currentQuestions = selected.sort(() => Math.random() - 0.5).map(q => {
+                        const choices = [
+                            { text: q.correctAnswer, isCorrect: true },
+                            { text: q.option2, isCorrect: false },
+                            { text: q.option3, isCorrect: false },
+                            { text: q.option4, isCorrect: false }
+                        ].filter(c => c.text).sort(() => Math.random() - 0.5);
+                        return { ...q, choices };
+                    });
 
-                    currentQuestions = shuffleArray(selectedQuestions.map(processQuestionChoices));
                     currentIndex = 0;
                     history = [];
-
                     showScreen('quiz-screen');
-                    document.getElementById('user-name-display').textContent = `受験者: ${userName}`;
                     displayQuestion();
                 })
                 .catch(error => {
-                    console.error('GAS Error:', error);
-                    alert('サーバーからデータを取得できませんでした: ' + error.message);
+                    alert('サーバーとの通信に失敗しました: ' + error.message);
                 });
         }
 
         // 問題表示
         function displayQuestion() {
-            const question = currentQuestions[currentIndex];
-
+            const q = currentQuestions[currentIndex];
             document.getElementById('user-name-display').textContent = `受験者: ${userName}`;
             document.getElementById('question-progress').textContent = `問題 ${currentIndex + 1} / ${currentQuestions.length}`;
-            document.getElementById('question-text').textContent = question.questionText;
-
-            const choicesDiv = document.getElementById('choices');
-            choicesDiv.innerHTML = '';
-
-            question.choices.forEach((choice, index) => {
+            document.getElementById('question-text').textContent = q.questionText;
+            
+            const div = document.getElementById('choices');
+            div.innerHTML = '';
+            q.choices.forEach((choice, i) => {
                 const choiceDiv = document.createElement('div');
                 choiceDiv.className = 'choice';
-                choiceDiv.innerHTML = `<span>${choice.text}</span><span id="icon-${index}"></span>`;
-                choiceDiv.onclick = () => selectAnswer(index);
-                choicesDiv.appendChild(choiceDiv);
+                choiceDiv.innerHTML = `<span>${choice.text}</span><span id="icon-${i}"></span>`;
+                choiceDiv.onclick = () => selectAnswer(i);
+                div.appendChild(choiceDiv);
             });
-
+            
             document.getElementById('explanation').classList.add('hidden');
             document.getElementById('next-btn').classList.add('hidden');
         }
 
         // 回答選択
         function selectAnswer(index) {
-            const question = currentQuestions[currentIndex];
+            const q = currentQuestions[currentIndex];
             const choices = document.querySelectorAll('.choice');
-
-            // 既に回答済みなら無視
             if (choices[0].classList.contains('disabled')) return;
-
-            const selectedChoice = question.choices[index];
-
-            // 履歴に記録
+            
+            const selected = q.choices[index];
             history.push({
-                userName: userName,
-                questionNumber: question.questionNumber,
-                distributionNumber: question.distributionNumber,
-                questionText: question.questionText,
-                selectedAnswer: selectedChoice.text,
-                correctAnswer: question.correctAnswer,
-                isCorrect: selectedChoice.isCorrect,
+                userName,
+                questionNumber: q.questionNumber,
+                distributionNumber: q.distributionNumber,
+                questionText: q.questionText,
+                selectedAnswer: selected.text,
+                correctAnswer: q.correctAnswer,
+                isCorrect: selected.isCorrect,
                 timestamp: new Date().toISOString()
             });
-
-            // 選択肢に結果を表示
-            choices.forEach((choiceDiv, i) => {
-                choiceDiv.classList.add('disabled');
-                const choice = question.choices[i];
+            
+            choices.forEach((div, i) => {
+                div.classList.add('disabled');
+                const choice = q.choices[i];
                 const icon = document.getElementById(`icon-${i}`);
-
                 if (i === index) {
-                    if (choice.isCorrect) {
-                        choiceDiv.classList.add('correct');
-                        icon.textContent = '✅';
-                    } else {
-                        choiceDiv.classList.add('incorrect');
-                        icon.textContent = '❌';
-                    }
+                    div.classList.add(choice.isCorrect ? 'correct' : 'incorrect');
+                    icon.textContent = choice.isCorrect ? '✅' : '❌';
                 } else if (choice.isCorrect) {
-                    choiceDiv.classList.add('show-correct');
+                    div.classList.add('show-correct');
                     icon.textContent = '✅';
                 }
             });
-
-            // 解説表示
-            document.getElementById('explanation-text').textContent = question.explanation;
+            
+            document.getElementById('explanation-text').textContent = q.explanation;
             document.getElementById('explanation').classList.remove('hidden');
-
-            // 次へボタン表示
-            const nextBtn = document.getElementById('next-btn');
-            nextBtn.textContent = currentIndex < currentQuestions.length - 1 ? '次の問題へ' : '結果を見る';
-            nextBtn.classList.remove('hidden');
+            
+            const btn = document.getElementById('next-btn');
+            btn.textContent = currentIndex < currentQuestions.length - 1 ? '次の問題へ' : '結果を見る';
+            btn.classList.remove('hidden');
         }
 
         // 次の問題
@@ -822,55 +710,41 @@
 
         // 結果表示
         function showResults() {
-            const correctCount = history.filter(h => h.isCorrect).length;
-            const totalCount = history.length;
-            const accuracy = ((correctCount / totalCount) * 100).toFixed(1);
-
+            const correct = history.filter(h => h.isCorrect).length;
+            const total = history.length;
             document.getElementById('result-user-name').textContent = userName;
-            document.getElementById('correct-count').textContent = correctCount;
-            document.getElementById('total-count').textContent = totalCount;
-            document.getElementById('accuracy').textContent = accuracy;
-
+            document.getElementById('correct-count').textContent = correct;
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('accuracy').textContent = ((correct / total) * 100).toFixed(1);
             showScreen('result-screen');
         }
 
-        // 結果ダウンロード
+        // CSV ダウンロード
         function downloadResults() {
-            try {
-                const csvRows = [
-                    ['受験者名', '問題番号', 'Question Distribution番号', '問題文', '選択した回答', '正解', '正誤', '回答日時']
-                ];
-
-                history.forEach(h => {
-                    csvRows.push([
-                        h.userName || '',
-                        h.questionNumber || '',
-                        h.distributionNumber || '',
-                        (h.questionText || '').replace(/"/g, '""'),
-                        (h.selectedAnswer || '').replace(/"/g, '""'),
-                        (h.correctAnswer || '').replace(/"/g, '""'),
-                        h.isCorrect ? '正解' : '不正解',
-                        h.timestamp || ''
-                    ]);
-                });
-
-                const csvContent = csvRows.map(row => 
-                    row.map(cell => `"${cell}"`).join(',')
-                ).join('\n');
-
-                const bom = '\uFEFF';
-                const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `quiz_results_${userName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                alert('ダウンロードに失敗しました: ' + error.message);
-            }
+            const rows = [['受験者名', '問題番号', 'Distribution番号', '問題文', '選択回答', '正解', '正誤', '回答日時']];
+            history.forEach(h => {
+                rows.push([
+                    h.userName,
+                    h.questionNumber,
+                    h.distributionNumber,
+                    h.questionText.replace(/"/g, '""'),
+                    h.selectedAnswer.replace(/"/g, '""'),
+                    h.correctAnswer.replace(/"/g, '""'),
+                    h.isCorrect ? '正解' : '不正解',
+                    h.timestamp
+                ]);
+            });
+            
+            const csv = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `quiz_results_${userName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         // リスタート
@@ -882,28 +756,6 @@
             currentIndex = 0;
             history = [];
             showModeSelect();
-        }
-        function generateAccessCode() {
-            // ... 既存のチェック処理 ...
-            
-            const code = generateRandomCode();
-            const settingsToSave = {
-                accessCode: code,
-                settings: distributionSettings
-            };
-            
-            // GETパラメータで送信（CORS回避）
-            const params = encodeURIComponent(JSON.stringify(settingsToSave));
-            const url = `${GAS_API_URL}?action=save&data=${params}`;
-            
-            fetch(url, { method: 'GET' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        document.getElementById('generated-code').textContent = code;
-                        alert(`アクセスコード ${code} が保存されました`);
-                    }
-                });
         }
     </script>
 </body>

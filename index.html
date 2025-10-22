@@ -124,8 +124,13 @@
             color: white;
         }
 
-        .btn-success:hover {
+        .btn-success:hover:not(:disabled) {
             background: #218838;
+        }
+
+        .btn-success:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
 
         .btn-secondary {
@@ -360,7 +365,7 @@
             </div>
             <div class="form-group">
                 <label>アクセスコード</label>
-                <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6" style="text-transform: uppercase;">
+                <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6">
             </div>
             <button class="btn btn-success" onclick="startQuiz()">クイズを開始</button>
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
@@ -400,7 +405,7 @@
 
     <script>
         // グローバル変数
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxT3zAqqrgZ9K_bGRkW89qWzSIl6Zj7MKsv1xCJRQ7ikEGY16-SpcA0GybC0vysXJ0/exec';
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwuK0gO9GBtir8SGmYoTjBJ9RYiIz0dOiLAFjF9hlkdNxyrudwWRnfQMk-s2FI_Jhha/exec';
         const ADMIN_PASSWORD = 'admin2024';
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv';
         
@@ -582,59 +587,68 @@
                 });
         }
 
-// クイズ開始（修正版）
-function startQuiz() {
-    userName = document.getElementById('user-name').value.trim();
-    const code = document.getElementById('access-code').value.trim();
+        // クイズ開始
+        function startQuiz() {
+            userName = document.getElementById('user-name').value.trim();
+            const code = document.getElementById('access-code').value.trim();
 
-    if (!userName || !code) {
-        alert('名前とアクセスコードを入力してください');
-        return;
-    }
-
-    // まず問題を読み込む
-    if (allQuestions.length === 0) {
-        alert('問題を読み込んでいます...');
-        
-        Papa.parse(GOOGLE_SHEET_CSV_URL, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                allQuestions = results.data
-                    .filter(row => row['問題番号'] && row['問題文'])
-                    .map(row => ({
-                        questionNumber: (row['問題番号'] || '').trim(),
-                        distributionNumber: (row['Question Distribution番号'] || '').trim(),
-                        questionText: (row['問題文'] || '').trim(),
-                        correctAnswer: (row['選択肢1(正解)'] || '').trim(),
-                        option2: (row['選択肢2'] || '').trim(),
-                        option3: (row['選択肢3'] || '').trim(),
-                        option4: (row['選択肢4'] || '').trim(),
-                        explanation: (row['解説'] || '解説はありません').trim()
-                    }));
-                
-                // 問題読み込み後、アクセスコードを検証
-                validateAndStartQuiz(code);
-            },
-            error: function(error) {
-                console.error("Error:", error);
-                alert('問題の読み込みに失敗しました');
+            if (!userName || !code) {
+                alert('名前とアクセスコードを入力してください');
+                return;
             }
-        });
-    } else {
-        // 既に読み込み済み
-        validateAndStartQuiz(code);
-    }
-}
+
+            // ボタンを無効化（連打防止）
+            const startBtn = document.querySelector('#user-login-screen .btn-success');
+            startBtn.disabled = true;
+            startBtn.textContent = '読み込み中...';
+
+            // 問題が読み込まれていない場合、自動的に読み込む
+            if (allQuestions.length === 0) {
+                Papa.parse(GOOGLE_SHEET_CSV_URL, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        allQuestions = results.data
+                            .filter(row => row['問題番号'] && row['問題文'])
+                            .map(row => ({
+                                questionNumber: (row['問題番号'] || '').trim(),
+                                distributionNumber: (row['Question Distribution番号'] || '').trim(),
+                                questionText: (row['問題文'] || '').trim(),
+                                correctAnswer: (row['選択肢1(正解)'] || '').trim(),
+                                option2: (row['選択肢2'] || '').trim(),
+                                option3: (row['選択肢3'] || '').trim(),
+                                option4: (row['選択肢4'] || '').trim(),
+                                explanation: (row['解説'] || '解説はありません').trim()
+                            }));
+                        
+                        // 問題読み込み後、クイズを開始
+                        validateAndStartQuiz(code, startBtn);
+                    },
+                    error: function(error) {
+                        console.error("Error:", error);
+                        alert('問題の読み込みに失敗しました');
+                        // ボタンを元に戻す
+                        startBtn.disabled = false;
+                        startBtn.textContent = 'クイズを開始';
+                    }
+                });
+            } else {
+                // 既に読み込み済みの場合
+                validateAndStartQuiz(code, startBtn);
+            }
+        }
 
         // アクセスコード検証とクイズ開始
-        function validateAndStartQuiz(code) {
+        function validateAndStartQuiz(code, startBtn) {
             fetch(`${GAS_API_URL}?action=load&code=${code}`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.status === 'error') {
-                        alert(data.message || '無効なアクセスコードです');
+                    if (data.status === 'error' || !data.accessCode) {
+                        alert(data.message || '有効なアクセスコードが設定されていません');
+                        // ボタンを元に戻す
+                        startBtn.disabled = false;
+                        startBtn.textContent = 'クイズを開始';
                         return;
                     }
 
@@ -648,6 +662,9 @@ function startQuiz() {
 
                     if (selected.length === 0) {
                         alert('出題問題がありません');
+                        // ボタンを元に戻す
+                        startBtn.disabled = false;
+                        startBtn.textContent = 'クイズを開始';
                         return;
                     }
 
@@ -661,16 +678,26 @@ function startQuiz() {
                         return { ...q, choices };
                     });
 
+                    // 状態を完全にリセット
                     currentIndex = 0;
                     history = [];
+                    
+                    // クイズ画面に遷移
                     showScreen('quiz-screen');
                     displayQuestion();
+                    
+                    // ボタンを元に戻す（次回のために）
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'クイズを開始';
                 })
                 .catch(error => {
                     alert('サーバーとの通信に失敗しました: ' + error.message);
+                    // ボタンを元に戻す
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'クイズを開始';
                 });
         }
-        
+
         // 問題表示
         function displayQuestion() {
             const q = currentQuestions[currentIndex];
@@ -679,7 +706,8 @@ function startQuiz() {
             document.getElementById('question-text').textContent = q.questionText;
             
             const div = document.getElementById('choices');
-            div.innerHTML = '';
+            div.innerHTML = ''; // 前の問題の選択肢をクリア
+            
             q.choices.forEach((choice, i) => {
                 const choiceDiv = document.createElement('div');
                 choiceDiv.className = 'choice';
@@ -688,6 +716,7 @@ function startQuiz() {
                 div.appendChild(choiceDiv);
             });
             
+            // 解説と次へボタンを非表示にリセット
             document.getElementById('explanation').classList.add('hidden');
             document.getElementById('next-btn').classList.add('hidden');
         }

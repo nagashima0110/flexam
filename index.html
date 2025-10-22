@@ -646,7 +646,8 @@
             document.getElementById('question-text').textContent = q.questionText;
             
             const div = document.getElementById('choices');
-            div.innerHTML = '';
+            div.innerHTML = ''; // 前の問題の選択肢をクリア
+            
             q.choices.forEach((choice, i) => {
                 const choiceDiv = document.createElement('div');
                 choiceDiv.className = 'choice';
@@ -655,6 +656,7 @@
                 div.appendChild(choiceDiv);
             });
             
+            // 解説と次へボタンを非表示にリセット
             document.getElementById('explanation').classList.add('hidden');
             document.getElementById('next-btn').classList.add('hidden');
         }

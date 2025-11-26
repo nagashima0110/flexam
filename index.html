@@ -704,7 +704,7 @@
             const q = currentQuestions[currentIndex];
             document.getElementById('user-name-display').textContent = `受験者: ${userName}`;
             document.getElementById('question-progress').textContent = `問題 ${currentIndex + 1} / ${currentQuestions.length}`;
-            document.getElementById('question-text').textContent = q.questionText;
+            document.getElementById('question-text').innerHTML = q.questionText.replace(/\n/g, '<br>');
             
             const div = document.getElementById('choices');
             div.innerHTML = ''; // 前の問題の選択肢をクリア

@@ -302,7 +302,7 @@
     <div class="container">
         <!-- モード選択画面 -->
         <div id="mode-select-screen">
-            <h1>資格取得支援アプリ</h1>
+            <h1>4択クイズアプリ</h1>
             <div class="mode-select">
                 <div class="mode-button" onclick="showAdminLogin()">
                     <h3>⚙️ 管理者モード</h3>
@@ -368,7 +368,7 @@
                 <label>アクセスコード</label>
                 <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6">
             </div>
-            <button class="btn btn-success" onclick="startQuiz()">模試を開始</button>
+            <button class="btn btn-success" onclick="startQuiz()">クイズを開始</button>
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
         </div>
 
@@ -399,8 +399,8 @@
                 </div>
                 <p>正答率: <span id="accuracy"></span>%</p>
             </div>
-            <button class="btn btn-success" onclick="downloadResults()">📥 結果をダウンロード（CSV）</button>
-            <button class="btn btn-secondary" onclick="restart()">🔄 最初に戻る</button>
+            <div id="save-status" class="success-message hidden" style="text-align: center; margin-bottom: 20px;"></div>
+            <button class="btn btn-secondary" onclick="restart()">🔄 最初に戻る</button>            
         </div>
     </div>
 
@@ -408,7 +408,7 @@
         // グローバル変数
         const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxT3zAqqrgZ9K_bGRkW89qWzSIl6Zj7MKsv1xCJRQ7ikEGY16-SpcA0GybC0vysXJ0/exec';
         const ADMIN_PASSWORD = 'admin2024';
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv';
+        const GOOGLE_SHEET_CSV_URL = 'https://script.google.com/macros/s/AKfycbxT3zAqqrgZ9K_bGRkW89qWzSIl6Zj7MKsv1xCJRQ7ikEGY16-SpcA0GybC0vysXJ0/exec';
         
         let allQuestions = [];
         let distributionSettings = [];

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4択クイズアプリ</title>
+    <title>🫒O.L.I.V.E</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
@@ -302,7 +302,7 @@
     <div class="container">
         <!-- モード選択画面 -->
         <div id="mode-select-screen">
-            <h1>4択クイズアプリ</h1>
+            <h1>🫒Optimal Learning in IT Verification & Essensials</h1>
             <div class="mode-select">
                 <div class="mode-button" onclick="showAdminLogin()">
                     <h3>⚙️ 管理者モード</h3>
@@ -368,7 +368,7 @@
                 <label>アクセスコード</label>
                 <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6">
             </div>
-            <button class="btn btn-success" onclick="startQuiz()">クイズを開始</button>
+            <button class="btn btn-success" onclick="startQuiz()">試験を開始</button>
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
         </div>
 
@@ -391,7 +391,7 @@
 
         <!-- 結果画面 -->
         <div id="result-screen" class="hidden">
-            <h2>クイズ完了！</h2>
+            <h2>🫒試験完了！</h2>
             <div class="result-box">
                 <p>受験者: <strong id="result-user-name"></strong></p>
                 <div class="score">
@@ -631,7 +631,7 @@
                         alert('問題の読み込みに失敗しました');
                         // ボタンを元に戻す
                         startBtn.disabled = false;
-                        startBtn.textContent = 'クイズを開始';
+                        startBtn.textContent = '試験を開始';
                     }
                 });
             } else {
@@ -649,7 +649,7 @@
                         alert(data.message || '有効なアクセスコードが設定されていません');
                         // ボタンを元に戻す
                         startBtn.disabled = false;
-                        startBtn.textContent = 'クイズを開始';
+                        startBtn.textContent = '試験を開始';
                         return;
                     }
 
@@ -665,7 +665,7 @@
                         alert('出題問題がありません');
                         // ボタンを元に戻す
                         startBtn.disabled = false;
-                        startBtn.textContent = 'クイズを開始';
+                        startBtn.textContent = '試験を開始';
                         return;
                     }
 
@@ -689,13 +689,13 @@
                     
                     // ボタンを元に戻す（次回のために）
                     startBtn.disabled = false;
-                    startBtn.textContent = 'クイズを開始';
+                    startBtn.textContent = '試験を開始';
                 })
                 .catch(error => {
                     alert('サーバーとの通信に失敗しました: ' + error.message);
                     // ボタンを元に戻す
                     startBtn.disabled = false;
-                    startBtn.textContent = 'クイズを開始';
+                    startBtn.textContent = '試験を開始';
                 });
         }
 
@@ -806,7 +806,7 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.status === 'success') {
-                        statusDiv.textContent = '✓ 結果がGoogleスプレッドシートに保存されました';
+                        statusDiv.textContent = '✓ 結果が送信されました';
                         statusDiv.style.color = '#28a745';
                     } else {
                         throw new Error(result.message || 'Unknown error');

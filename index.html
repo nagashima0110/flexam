@@ -790,6 +790,13 @@
         // Googleスプレッドシートに結果を保存
         function saveResultsToSheet() {
             const statusDiv = document.getElementById('save-status');
+            const restartBtn = document.querySelector('#result-screen .btn-secondary');
+            
+            // ボタンを無効化
+            restartBtn.disabled = true;
+            restartBtn.style.opacity = '0.5';
+            restartBtn.style.cursor = 'not-allowed';
+            
             statusDiv.textContent = '結果を保存中...';
             statusDiv.classList.remove('hidden');
             
@@ -802,13 +809,19 @@
                         statusDiv.textContent = '✓ 結果がGoogleスプレッドシートに保存されました';
                         statusDiv.style.color = '#28a745';
                     } else {
-                        throw new Error(result.message);
+                        throw new Error(result.message || 'Unknown error');
                     }
                 })
                 .catch(error => {
                     statusDiv.textContent = '⚠ 結果の保存に失敗しました: ' + error.message;
                     statusDiv.style.color = '#dc3545';
                     console.error('Save error:', error);
+                })
+                .finally(() => {
+                    // 保存完了後、ボタンを有効化
+                    restartBtn.disabled = false;
+                    restartBtn.style.opacity = '1';
+                    restartBtn.style.cursor = 'pointer';
                 });
         }
 

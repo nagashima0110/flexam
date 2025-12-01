@@ -302,7 +302,7 @@
     <div class="container">
         <!-- モード選択画面 -->
         <div id="mode-select-screen">
-            <h1>🫒O.L.I.V.E</h1>
+            <h1>🫒O.L.I.V.E<</h1>
             <i>Optimal Learning in IT Verification & Essensials</i>
             <div class="mode-select">
                 <div class="mode-button" onclick="showAdminLogin()">
@@ -369,7 +369,7 @@
                 <label>アクセスコード</label>
                 <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6">
             </div>
-            <button class="btn btn-success" onclick="startQuiz()">試験を開始</button>
+            <button class="btn btn-success" onclick="startQuiz()">クイズを開始</button>
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
         </div>
 
@@ -392,7 +392,7 @@
 
         <!-- 結果画面 -->
         <div id="result-screen" class="hidden">
-            <h2>🫒試験完了！</h2>
+            <h2>クイズ完了！</h2>
             <div class="result-box">
                 <p>受験者: <strong id="result-user-name"></strong></p>
                 <div class="score">
@@ -407,7 +407,7 @@
 
     <script>
         // グローバル変数
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyIbXwkzzOXGGLK2p9IeqaT5cmpwt2W4qPTiGOv2cCwsabF46nB-rObetQHJLY-Xq-Q/exec';
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwx4HUMCj3kOKQ-25DlgzbZ4t9z7BVV7fvb4iySasGN6RyHTaydmbM_3bMXD-PHnG0T/exec';
         const ADMIN_PASSWORD = 'admin2024';
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv';
         
@@ -801,13 +801,19 @@
             statusDiv.textContent = '結果を保存中...';
             statusDiv.classList.remove('hidden');
             
-            const url = `${GAS_API_URL}?action=saveResults&results=${encodeURIComponent(JSON.stringify(history))}`;
+            // POSTメソッドで送信
+            const formData = new FormData();
+            formData.append('action', 'saveResults');
+            formData.append('results', JSON.stringify(history));
             
-            fetch(url)
+            fetch(GAS_API_URL, {
+                method: 'POST',
+                body: formData
+            })
                 .then(response => response.json())
                 .then(result => {
                     if (result.status === 'success') {
-                        statusDiv.textContent = '✓ 結果が送信されました';
+                        statusDiv.textContent = '✓ 結果がGoogleスプレッドシートに保存されました';
                         statusDiv.style.color = '#28a745';
                     } else {
                         throw new Error(result.message || 'Unknown error');

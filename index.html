@@ -302,7 +302,7 @@
     <div class="container">
         <!-- モード選択画面 -->
         <div id="mode-select-screen">
-            <h1>🫒O.L.I.V.E<</h1>
+            <h1>🫒O.L.I.V.E</h1>
             <i>Optimal Learning in IT Verification & Essensials</i>
             <div class="mode-select">
                 <div class="mode-button" onclick="showAdminLogin()">
@@ -342,7 +342,7 @@
 
             <div id="distribution-settings" class="hidden">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <label>出題設定（Distribution番号別）</label>
+                    <label>出題設定(Distribution番号別)</label>
                     <button class="btn btn-add" onclick="addDistribution()">➕ 追加</button>
                 </div>
                 <div id="distribution-list" class="distribution-list"></div>
@@ -362,14 +362,14 @@
         <div id="user-login-screen" class="hidden">
             <h2>受験者ログイン</h2>
             <div class="form-group">
-                <label>受験者名</label>
-                <input type="text" id="user-name" placeholder="氏名を入力">
+                <label>社員番号</label>
+                <input type="text" id="employee-id" placeholder="6桁の社員番号を入力" maxlength="6" pattern="[0-9]*">
             </div>
             <div class="form-group">
                 <label>アクセスコード</label>
                 <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6">
             </div>
-            <button class="btn btn-success" onclick="startQuiz()">クイズを開始</button>
+            <button class="btn btn-success" onclick="startQuiz()">試験を開始</button>
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
         </div>
 
@@ -392,9 +392,10 @@
 
         <!-- 結果画面 -->
         <div id="result-screen" class="hidden">
-            <h2>クイズ完了！</h2>
+            <h2>試験完了!</h2>
             <div class="result-box">
-                <p>受験者: <strong id="result-user-name"></strong></p>
+                <p>社員番号: <strong id="result-employee-id"></strong></p>
+                <p>氏名: <strong id="result-user-name"></strong></p>
                 <div class="score">
                     <span id="correct-count"></span> / <span id="total-count"></span> 問正解
                 </div>
@@ -407,7 +408,7 @@
 
     <script>
         // グローバル変数
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwx4HUMCj3kOKQ-25DlgzbZ4t9z7BVV7fvb4iySasGN6RyHTaydmbM_3bMXD-PHnG0T/exec';
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxkR2bXUFaC3EKrR7UTYltrGnw1dHHSCi1_CXdAjCJMpbGjQIrtkrCKB-ht-vylfpOs/exec';
         const ADMIN_PASSWORD = 'admin2024';
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv';
         
@@ -416,7 +417,18 @@
         let currentQuestions = [];
         let currentIndex = 0;
         let history = [];
-        let userName = '';
+        let employeeId = '';
+        let employeeName = '';
+        let currentAccessCode = '';
+
+        // 日本時間(JST)を取得する関数
+        function getJSTTimestamp() {
+            const now = new Date();
+            const jstOffset = 9 * 60; // JSTはUTC+9時間
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const jst = new Date(utc + (jstOffset * 60000));
+            return jst.toISOString().replace('T', ' ').substring(0, 19);
+        }
 
         // 画面表示関数
         function showScreen(screenId) {
@@ -591,54 +603,76 @@
 
         // クイズ開始
         function startQuiz() {
-            userName = document.getElementById('user-name').value.trim();
+            const inputEmployeeId = document.getElementById('employee-id').value.trim();
             const code = document.getElementById('access-code').value.trim();
 
-            if (!userName || !code) {
-                alert('名前とアクセスコードを入力してください');
+            if (!inputEmployeeId || !code) {
+                alert('社員番号とアクセスコードを入力してください');
                 return;
             }
 
-            // ボタンを無効化（連打防止）
+            // 社員番号を6桁0埋め
+            employeeId = inputEmployeeId.padStart(6, '0');
+
+            // ボタンを無効化(連打防止)
             const startBtn = document.querySelector('#user-login-screen .btn-success');
             startBtn.disabled = true;
-            startBtn.textContent = '読み込み中...';
+            startBtn.textContent = '認証中...';
 
-            // 問題が読み込まれていない場合、自動的に読み込む
-            if (allQuestions.length === 0) {
-                Papa.parse(GOOGLE_SHEET_CSV_URL, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        allQuestions = results.data
-                            .filter(row => row['問題番号'] && row['問題文'])
-                            .map(row => ({
-                                questionNumber: (row['問題番号'] || '').trim(),
-                                distributionNumber: (row['Question Distribution番号'] || '').trim(),
-                                questionText: (row['問題文'] || '').trim(),
-                                correctAnswer: (row['選択肢1(正解)'] || '').trim(),
-                                option2: (row['選択肢2'] || '').trim(),
-                                option3: (row['選択肢3'] || '').trim(),
-                                option4: (row['選択肢4'] || '').trim(),
-                                explanation: (row['解説'] || '解説はありません').trim()
-                            }));
-                        
-                        // 問題読み込み後、クイズを開始
-                        validateAndStartQuiz(code, startBtn);
-                    },
-                    error: function(error) {
-                        console.error("Error:", error);
-                        alert('問題の読み込みに失敗しました');
-                        // ボタンを元に戻す
+            // 社員情報を取得
+            fetch(`${GAS_API_URL}?action=getEmployee&employeeId=${employeeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error') {
+                        alert(data.message);
                         startBtn.disabled = false;
                         startBtn.textContent = '試験を開始';
+                        return;
                     }
+
+                    employeeName = data.name;
+                    currentAccessCode = code;
+
+                    // 問題が読み込まれていない場合、自動的に読み込む
+                    if (allQuestions.length === 0) {
+                        startBtn.textContent = '問題読み込み中...';
+                        Papa.parse(GOOGLE_SHEET_CSV_URL, {
+                            download: true,
+                            header: true,
+                            skipEmptyLines: true,
+                            complete: function(results) {
+                                allQuestions = results.data
+                                    .filter(row => row['問題番号'] && row['問題文'])
+                                    .map(row => ({
+                                        questionNumber: (row['問題番号'] || '').trim(),
+                                        distributionNumber: (row['Question Distribution番号'] || '').trim(),
+                                        questionText: (row['問題文'] || '').trim(),
+                                        correctAnswer: (row['選択肢1(正解)'] || '').trim(),
+                                        option2: (row['選択肢2'] || '').trim(),
+                                        option3: (row['選択肢3'] || '').trim(),
+                                        option4: (row['選択肢4'] || '').trim(),
+                                        explanation: (row['解説'] || '解説はありません').trim()
+                                    }));
+                                
+                                // 問題読み込み後、クイズを開始
+                                validateAndStartQuiz(code, startBtn);
+                            },
+                            error: function(error) {
+                                console.error("Error:", error);
+                                alert('問題の読み込みに失敗しました');
+                                startBtn.disabled = false;
+                                startBtn.textContent = '試験を開始';
+                            }
+                        });
+                    } else {
+                        validateAndStartQuiz(code, startBtn);
+                    }
+                })
+                .catch(error => {
+                    alert('社員情報の取得に失敗しました: ' + error.message);
+                    startBtn.disabled = false;
+                    startBtn.textContent = '試験を開始';
                 });
-            } else {
-                // 既に読み込み済みの場合
-                validateAndStartQuiz(code, startBtn);
-            }
         }
 
         // アクセスコード検証とクイズ開始
@@ -648,7 +682,6 @@
                 .then(data => {
                     if (data.status === 'error' || !data.accessCode) {
                         alert(data.message || '有効なアクセスコードが設定されていません');
-                        // ボタンを元に戻す
                         startBtn.disabled = false;
                         startBtn.textContent = '試験を開始';
                         return;
@@ -664,7 +697,6 @@
 
                     if (selected.length === 0) {
                         alert('出題問題がありません');
-                        // ボタンを元に戻す
                         startBtn.disabled = false;
                         startBtn.textContent = '試験を開始';
                         return;
@@ -688,13 +720,12 @@
                     showScreen('quiz-screen');
                     displayQuestion();
                     
-                    // ボタンを元に戻す（次回のために）
+                    // ボタンを元に戻す(次回のために)
                     startBtn.disabled = false;
                     startBtn.textContent = '試験を開始';
                 })
                 .catch(error => {
                     alert('サーバーとの通信に失敗しました: ' + error.message);
-                    // ボタンを元に戻す
                     startBtn.disabled = false;
                     startBtn.textContent = '試験を開始';
                 });
@@ -703,12 +734,12 @@
         // 問題表示
         function displayQuestion() {
             const q = currentQuestions[currentIndex];
-            document.getElementById('user-name-display').textContent = `受験者: ${userName}`;
+            document.getElementById('user-name-display').textContent = `${employeeName} (${employeeId})`;
             document.getElementById('question-progress').textContent = `問題 ${currentIndex + 1} / ${currentQuestions.length}`;
             document.getElementById('question-text').innerHTML = q.questionText.replace(/\n/g, '<br>');
             
             const div = document.getElementById('choices');
-            div.innerHTML = ''; // 前の問題の選択肢をクリア
+            div.innerHTML = '';
             
             q.choices.forEach((choice, i) => {
                 const choiceDiv = document.createElement('div');
@@ -718,7 +749,6 @@
                 div.appendChild(choiceDiv);
             });
             
-            // 解説と次へボタンを非表示にリセット
             document.getElementById('explanation').classList.add('hidden');
             document.getElementById('next-btn').classList.add('hidden');
         }
@@ -731,14 +761,13 @@
             
             const selected = q.choices[index];
             history.push({
-                userName,
                 questionNumber: q.questionNumber,
                 distributionNumber: q.distributionNumber,
                 questionText: q.questionText,
                 selectedAnswer: selected.text,
                 correctAnswer: q.correctAnswer,
                 isCorrect: selected.isCorrect,
-                timestamp: new Date().toISOString()
+                timestamp: getJSTTimestamp()
             });
             
             choices.forEach((div, i) => {
@@ -754,7 +783,6 @@
                 }
             });
             
-            // 解説の改行を<br>タグに変換して表示
             const explanationText = q.explanation.replace(/\n/g, '<br>');
             document.getElementById('explanation-text').innerHTML = explanationText;
             document.getElementById('explanation').classList.remove('hidden');
@@ -778,7 +806,8 @@
         function showResults() {
             const correct = history.filter(h => h.isCorrect).length;
             const total = history.length;
-            document.getElementById('result-user-name').textContent = userName;
+            document.getElementById('result-employee-id').textContent = employeeId;
+            document.getElementById('result-user-name').textContent = employeeName;
             document.getElementById('correct-count').textContent = correct;
             document.getElementById('total-count').textContent = total;
             document.getElementById('accuracy').textContent = ((correct / total) * 100).toFixed(1);
@@ -805,8 +834,22 @@
             const formData = new FormData();
             formData.append('action', 'saveResults');
             formData.append('results', JSON.stringify(history));
+            formData.append('accessCode', currentAccessCode);
+            formData.append('employeeId', employeeId);
             
-            fetch(GAS_API_URL, {
+            // リトライ機能付きfetch
+            const fetchWithRetry = (url, options, retries = 3) => {
+                return fetch(url, options)
+                    .then(response => {
+                        if (!response.ok && retries > 0) {
+                            return new Promise(resolve => setTimeout(resolve, 1000))
+                                .then(() => fetchWithRetry(url, options, retries - 1));
+                        }
+                        return response;
+                    });
+            };
+            
+            fetchWithRetry(GAS_API_URL, {
                 method: 'POST',
                 body: formData
             })
@@ -834,9 +877,11 @@
 
         // リスタート
         function restart() {
-            document.getElementById('user-name').value = '';
+            document.getElementById('employee-id').value = '';
             document.getElementById('access-code').value = '';
-            userName = '';
+            employeeId = '';
+            employeeName = '';
+            currentAccessCode = '';
             currentQuestions = [];
             currentIndex = 0;
             history = [];

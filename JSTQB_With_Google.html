@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4択クイズアプリ</title>
-//    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="papaparse.min.js"></script>
+    <title>🫒O.L.I.V.E</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -111,8 +110,13 @@
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #5568d3;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
 
         .btn-success {
@@ -120,8 +124,13 @@
             color: white;
         }
 
-        .btn-success:hover {
+        .btn-success:hover:not(:disabled) {
             background: #218838;
+        }
+
+        .btn-success:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
 
         .btn-secondary {
@@ -141,23 +150,14 @@
             width: auto;
         }
 
-        .upload-area {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            background: #f8f9fa;
-            cursor: pointer;
-            transition: all 0.3s;
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+            margin-top: 10px;
         }
 
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #f0f2ff;
-        }
-
-        .upload-area input[type="file"] {
-            display: none;
+        .btn-warning:hover {
+            background: #e0a800;
         }
 
         .distribution-list {
@@ -268,9 +268,10 @@
             margin: 20px 0;
         }
 
-        .explanation-box h4 {
-            color: #1976d2;
-            margin-bottom: 10px;
+        .explanation-box p {
+            color: #333;
+            line-height: 1.6;
+            white-space: pre-wrap;
         }
 
         .result-box {
@@ -298,11 +299,6 @@
             margin-top: 10px;
         }
 
-        .icon {
-            width: 24px;
-            height: 24px;
-        }
-
         .btn-add {
             background: #28a745;
             color: white;
@@ -310,13 +306,124 @@
             width: auto;
             margin-top: 10px;
         }
+
+        /* Exam Mode用のアコーディオンスタイル */
+        .accordion-item {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 16px;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .accordion-header:hover {
+            background: #e9ecef;
+        }
+
+        .accordion-header.correct {
+            background: #d4edda;
+            border-bottom: 2px solid #28a745;
+        }
+
+        .accordion-header.incorrect {
+            background: #f8d7da;
+            border-bottom: 2px solid #dc3545;
+        }
+
+        .accordion-content {
+            padding: 16px;
+            display: none;
+            background: white;
+        }
+
+        .accordion-content.active {
+            display: block;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .mode-badge.study {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .mode-badge.exam {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .mode-select-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .mode-select-btn {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .mode-select-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .mode-select-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- モード選択画面 -->
         <div id="mode-select-screen">
-            <h1>4択クイズアプリ</h1>
+            <h1>🫒O.L.I.V.E</h1>
+            <i>Optimal Learning in IT Verification & Essensials</i>
             <div class="mode-select">
                 <div class="mode-button" onclick="showAdminLogin()">
                     <h3>⚙️ 管理者モード</h3>
@@ -350,16 +457,30 @@
             <div class="form-group">
                 <label>問題データ読み込み</label>
                 <button class="btn btn-success" onclick="loadQuestionsFromSheet()">Googleスプレッドシートから読み込む</button>
-                <div id="upload-success" class="success-message hidden" style="margin-top: 10px;"></div>
+                <div id="upload-success" class="success-message hidden"></div>
             </div>
 
             <div id="distribution-settings" class="hidden">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <label>出題設定（Distribution番号別）</label>
+                    <label>出題設定(Distribution番号別)</label>
                     <button class="btn btn-add" onclick="addDistribution()">➕ 追加</button>
                 </div>
                 <div id="distribution-list" class="distribution-list"></div>
                 <div id="total-questions" class="success-message hidden"></div>
+            </div>
+
+            <div id="mode-selection" class="hidden">
+                <label>試験モード選択</label>
+                <div class="mode-select-buttons">
+                    <div class="mode-select-btn selected" onclick="selectMode('Study')" id="study-mode-btn">
+                        <h4>📚 Study Mode</h4>
+                        <p style="font-size: 12px; margin-top: 8px;">即座に正誤と解説を表示</p>
+                    </div>
+                    <div class="mode-select-btn" onclick="selectMode('Exam')" id="exam-mode-btn">
+                        <h4>📝 Exam Mode</h4>
+                        <p style="font-size: 12px; margin-top: 8px;">全問終了後に結果表示</p>
+                    </div>
+                </div>
             </div>
 
             <button id="generate-code-btn" class="btn btn-primary hidden" onclick="generateAccessCode()">アクセスコードを生成</button>
@@ -367,25 +488,27 @@
             <div id="access-code-display" class="access-code-display hidden">
                 <p>生成されたアクセスコード:</p>
                 <div class="code" id="generated-code"></div>
-                <p style="font-size: 12px; color: #666;">このコードを受験者に共有してください</p>
+                <span class="mode-badge" id="generated-mode-badge"></span>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">このコードを受験者に共有してください</p>
             </div>
         </div>
+
         <!-- 受験者ログイン画面 -->
         <div id="user-login-screen" class="hidden">
             <h2>受験者ログイン</h2>
             <div class="form-group">
-                <label>受験者名</label>
-                <input type="text" id="user-name" placeholder="氏名を入力">
+                <label>社員番号</label>
+                <input type="text" id="employee-id" placeholder="6桁の社員番号を入力" maxlength="6" pattern="[0-9]*">
             </div>
             <div class="form-group">
                 <label>アクセスコード</label>
-                <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6" style="text-transform: uppercase;">
+                <input type="text" id="access-code" placeholder="6文字のコードを入力" maxlength="6">
             </div>
-            <button class="btn btn-success" onclick="startQuiz()">クイズを開始</button>
+            <button class="btn btn-success" onclick="startQuiz()">試験を開始</button>
             <button class="btn btn-secondary" onclick="showModeSelect()">戻る</button>
         </div>
 
-        <!-- クイズ画面 -->
+        <!-- クイズ画面 (Study Mode & Exam Mode共通) -->
         <div id="quiz-screen" class="hidden">
             <div class="question-card">
                 <div class="question-header">
@@ -402,59 +525,87 @@
             </div>
         </div>
 
-        <!-- 結果画面 -->
+        <!-- Study Mode結果画面 -->
         <div id="result-screen" class="hidden">
-            <h2>クイズ完了！</h2>
+            <h2>試験完了!<span class="mode-badge study">Study Mode</span></h2>
             <div class="result-box">
-                <p>受験者: <strong id="result-user-name"></strong></p>
+                <p>社員番号: <strong id="result-employee-id"></strong></p>
+                <p>氏名: <strong id="result-user-name"></strong></p>
                 <div class="score">
                     <span id="correct-count"></span> / <span id="total-count"></span> 問正解
                 </div>
                 <p>正答率: <span id="accuracy"></span>%</p>
             </div>
-            <button class="btn btn-success" onclick="downloadResults()">📥 結果をダウンロード（CSV）</button>
-            <button class="btn btn-secondary" onclick="restart()">🔄 最初に戻る</button>
+            <div id="save-status" class="success-message hidden" style="text-align: center; margin-bottom: 20px;"></div>
+            <button class="btn btn-secondary" onclick="restart()">🔄 最初に戻る</button>            
+        </div>
+
+        <!-- Exam Mode結果画面 -->
+        <div id="exam-result-screen" class="hidden">
+            <h2>試験完了!<span class="mode-badge exam">Exam Mode</span></h2>
+            <div class="result-box">
+                <p>社員番号: <strong id="exam-result-employee-id"></strong></p>
+                <p>氏名: <strong id="exam-result-user-name"></strong></p>
+                <div class="score">
+                    <span id="exam-correct-count"></span> / <span id="exam-total-count"></span> 問正解
+                </div>
+                <p>正答率: <span id="exam-accuracy"></span>%</p>
+            </div>
+            <div id="exam-save-status" class="success-message hidden" style="text-align: center; margin-bottom: 20px;"></div>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterResults('all')">全て表示</button>
+                <button class="filter-btn" onclick="filterResults('incorrect')">間違えた問題のみ</button>
+                <button class="filter-btn" onclick="filterResults('correct')">正解した問題のみ</button>
+            </div>
+
+            <div id="exam-results-list"></div>
+
+            <button class="btn btn-warning" onclick="retryIncorrect()">❌ 間違えた問題を復習</button>
+            <button class="btn btn-secondary" onclick="restart()">🔄 最初に戻る</button>            
         </div>
     </div>
 
     <script>
         // グローバル変数
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwmHDStzqmwZVJvad6hmFcgj9tpny6L9bezaRhPAfsVHzKHt9hP6srWTaV5ZNJlxaAa/exec';
         const ADMIN_PASSWORD = 'admin2024';
-        // 【追加・要編集】ウェブに公開したGoogleスプレッドシートのCSV URLをここに設定
-        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv'; 
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv';
+        
         let allQuestions = [];
         let distributionSettings = [];
-        let quizConfig = null;
         let currentQuestions = [];
         let currentIndex = 0;
         let history = [];
-        let userName = '';
+        let employeeId = '';
+        let employeeName = '';
+        let currentAccessCode = '';
+        let selectedMode = 'Study'; // デフォルトはStudy Mode
+        let currentMode = 'Study'; // 実際の試験モード
+
+        // 日本時間(JST)を取得する関数
+        function getJSTTimestamp() {
+            const now = new Date();
+            const jstOffset = 9 * 60;
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const jst = new Date(utc + (jstOffset * 60000));
+            return jst.toISOString().replace('T', ' ').substring(0, 19);
+        }
 
         // 画面表示関数
         function showScreen(screenId) {
-            const screens = ['mode-select-screen', 'admin-login-screen', 'admin-screen', 'user-login-screen', 'quiz-screen', 'result-screen'];
-            screens.forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
+            const screens = ['mode-select-screen', 'admin-login-screen', 'admin-screen', 'user-login-screen', 'quiz-screen', 'result-screen', 'exam-result-screen'];
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        function showModeSelect() {
-            showScreen('mode-select-screen');
-        }
-
-        function showAdminLogin() {
-            showScreen('admin-login-screen');
-        }
-
-        function showUserLogin() {
-            showScreen('user-login-screen');
-        }
+        function showModeSelect() { showScreen('mode-select-screen'); }
+        function showAdminLogin() { showScreen('admin-login-screen'); }
+        function showUserLogin() { showScreen('user-login-screen'); }
 
         // 管理者ログイン
         function adminLogin() {
-            const password = document.getElementById('admin-password').value;
-            if (password === ADMIN_PASSWORD) {
+            if (document.getElementById('admin-password').value === ADMIN_PASSWORD) {
                 showScreen('admin-screen');
             } else {
                 alert('パスワードが間違っています');
@@ -466,18 +617,23 @@
             showModeSelect();
         }
 
-// CSVファイル読み込み 
-        // 【置き換え】元の handleFileUpload を削除し、loadQuestionsFromSheet に置き換えました
-        function loadQuestionsFromSheet() {
-            const url = GOOGLE_SHEET_CSV_URL;
-
-            if (!url.startsWith('http')) {
-                alert('エラー: GoogleスプレッドシートのURLが設定されていません。');
-                return;
-            }
+        // モード選択
+        function selectMode(mode) {
+            selectedMode = mode;
+            document.getElementById('study-mode-btn').classList.remove('selected');
+            document.getElementById('exam-mode-btn').classList.remove('selected');
             
-            Papa.parse(url, {
-                download: true, // URLからのダウンロードを有効にする
+            if (mode === 'Study') {
+                document.getElementById('study-mode-btn').classList.add('selected');
+            } else {
+                document.getElementById('exam-mode-btn').classList.add('selected');
+            }
+        }
+
+        // Googleスプレッドシートから問題読み込み
+        function loadQuestionsFromSheet() {
+            Papa.parse(GOOGLE_SHEET_CSV_URL, {
+                download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
@@ -494,18 +650,19 @@
                             explanation: (row['解説'] || '解説はありません').trim()
                         }));
                     
-                    document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み（Google Sheetから）`;
+                    document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み`;
                     document.getElementById('upload-success').classList.remove('hidden');
                     document.getElementById('distribution-settings').classList.remove('hidden');
+                    document.getElementById('mode-selection').classList.remove('hidden');
                     updateDistributionList();
                 },
-                error: function(error, file) {
-                    console.error("PapaParse Error:", error, file);
-                    alert('Googleスプレッドシートからのデータ読み込みに失敗しました。URLを確認し、ウェブに公開されているか確認してください。');
+                error: function(error) {
+                    console.error("Error:", error);
+                    alert('データ読み込みに失敗しました');
                 }
             });
         }
-        
+
         // Distribution設定
         function addDistribution() {
             distributionSettings.push({ distribution: '', count: 1 });
@@ -518,23 +675,23 @@
         }
 
         function updateDistributionList() {
-            const availableDistributions = [...new Set(allQuestions.map(q => q.distributionNumber))].sort();
+            const distributions = [...new Set(allQuestions.map(q => q.distributionNumber))].sort();
             const listDiv = document.getElementById('distribution-list');
             
             listDiv.innerHTML = '';
             distributionSettings.forEach((setting, index) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'distribution-item';
+                const div = document.createElement('div');
+                div.className = 'distribution-item';
                 
                 const select = document.createElement('select');
                 select.innerHTML = '<option value="">Distribution番号を選択</option>';
-                availableDistributions.forEach(dist => {
+                distributions.forEach(dist => {
                     const count = allQuestions.filter(q => q.distributionNumber === dist).length;
-                    const option = document.createElement('option');
-                    option.value = dist;
-                    option.textContent = `${dist} (${count}問)`;
-                    if (dist === setting.distribution) option.selected = true;
-                    select.appendChild(option);
+                    const opt = document.createElement('option');
+                    opt.value = dist;
+                    opt.textContent = `${dist} (${count}問)`;
+                    if (dist === setting.distribution) opt.selected = true;
+                    select.appendChild(opt);
                 });
                 select.onchange = (e) => {
                     distributionSettings[index].distribution = e.target.value;
@@ -553,16 +710,13 @@
                 const span = document.createElement('span');
                 span.textContent = '問';
                 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-danger';
-                deleteBtn.textContent = '🗑️';
-                deleteBtn.onclick = () => removeDistribution(index);
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-danger';
+                btn.textContent = '🗑️';
+                btn.onclick = () => removeDistribution(index);
                 
-                itemDiv.appendChild(select);
-                itemDiv.appendChild(input);
-                itemDiv.appendChild(span);
-                itemDiv.appendChild(deleteBtn);
-                listDiv.appendChild(itemDiv);
+                div.append(select, input, span, btn);
+                listDiv.appendChild(div);
             });
             
             updateTotalQuestions();
@@ -574,114 +728,199 @@
                 return sum + Math.min(s.count, available);
             }, 0);
             
-            const totalDiv = document.getElementById('total-questions');
+            const div = document.getElementById('total-questions');
             if (total > 0) {
-                totalDiv.textContent = `合計出題数: ${total}問`;
-                totalDiv.classList.remove('hidden');
+                div.textContent = `合計出題数: ${total}問`;
+                div.classList.remove('hidden');
                 document.getElementById('generate-code-btn').classList.remove('hidden');
             } else {
-                totalDiv.classList.add('hidden');
+                div.classList.add('hidden');
                 document.getElementById('generate-code-btn').classList.add('hidden');
             }
         }
 
         // アクセスコード生成
         function generateAccessCode() {
-            if (distributionSettings.length === 0 || distributionSettings.every(s => !s.distribution)) {
-                alert('出題設定を追加してください');
-                return;
-            }
-
-            const selectedQuestions = [];
-            distributionSettings.forEach(setting => {
-                if (setting.distribution) {
-                    const filtered = allQuestions.filter(q => q.distributionNumber === setting.distribution);
-                    const shuffled = filtered.sort(() => Math.random() - 0.5);
-                    const selected = shuffled.slice(0, Math.min(setting.count, shuffled.length));
-                    selectedQuestions.push(...selected);
-                }
-            });
-
-            if (selectedQuestions.length === 0) {
-                alert('選択された問題がありません');
+            if (allQuestions.length === 0 || distributionSettings.length === 0) {
+                alert('問題を読み込み、出題設定を追加してください');
                 return;
             }
 
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            quizConfig = {
-                code: code,
-                questions: selectedQuestions
+            const data = {
+                accessCode: code,
+                settings: distributionSettings.map(s => ({ distribution: s.distribution, count: s.count })),
+                mode: selectedMode
             };
 
-            document.getElementById('generated-code').textContent = code;
+            document.getElementById('generate-code-btn').disabled = true;
+            document.getElementById('generated-code').textContent = '送信中...';
             document.getElementById('access-code-display').classList.remove('hidden');
-            
-            alert(`アクセスコード: ${code}\nこのコードを受験者に共有してください。`);
+
+            const url = `${GAS_API_URL}?action=save&data=${encodeURIComponent(JSON.stringify(data))}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        document.getElementById('generated-code').textContent = code;
+                        const badge = document.getElementById('generated-mode-badge');
+                        badge.textContent = selectedMode + ' Mode';
+                        badge.className = 'mode-badge ' + (selectedMode === 'Study' ? 'study' : 'exam');
+                        alert(`アクセスコード ${code} (${selectedMode} Mode) が保存されました`);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('generated-code').textContent = 'エラー';
+                    alert('保存に失敗しました: ' + error.message);
+                })
+                .finally(() => {
+                    document.getElementById('generate-code-btn').disabled = false;
+                });
         }
 
-        // クイズ開始
+        // 試験開始
         function startQuiz() {
-            userName = document.getElementById('user-name').value.trim();
-            const accessCode = document.getElementById('access-code').value.trim().toUpperCase();
+            const inputEmployeeId = document.getElementById('employee-id').value.trim();
+            const code = document.getElementById('access-code').value.trim();
 
-            if (!userName) {
-                alert('受験者名を入力してください');
-                return;
-            }
-            if (!accessCode) {
-                alert('アクセスコードを入力してください');
+            if (!inputEmployeeId || !code) {
+                alert('社員番号とアクセスコードを入力してください');
                 return;
             }
 
-            if (!quizConfig || quizConfig.code !== accessCode) {
-                alert('アクセスコードが無効です');
-                return;
-            }
+            employeeId = inputEmployeeId.padStart(6, '0');
 
-            // 問題を準備
-            currentQuestions = quizConfig.questions.map(q => {
-                const choices = [
-                    { text: q.correctAnswer, isCorrect: true },
-                    { text: q.option2, isCorrect: false },
-                    { text: q.option3, isCorrect: false },
-                    { text: q.option4, isCorrect: false }
-                ];
-                
-                // Fisher-Yatesシャッフル
-                for (let i = choices.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [choices[i], choices[j]] = [choices[j], choices[i]];
-                }
+            const startBtn = document.querySelector('#user-login-screen .btn-success');
+            startBtn.disabled = true;
+            startBtn.textContent = '認証中...';
 
-                return { ...q, choices };
-            });
+            // 社員情報を取得
+            fetch(`${GAS_API_URL}?action=getEmployee&employeeId=${employeeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error') {
+                        alert(data.message);
+                        startBtn.disabled = false;
+                        startBtn.textContent = '試験を開始';
+                        return;
+                    }
 
-            // 問題全体をシャッフル
-            currentQuestions.sort(() => Math.random() - 0.5);
+                    employeeName = data.name;
+                    currentAccessCode = code;
 
-            currentIndex = 0;
-            history = [];
-            showScreen('quiz-screen');
-            displayQuestion();
+                    if (allQuestions.length === 0) {
+                        startBtn.textContent = '問題読み込み中...';
+                        Papa.parse(GOOGLE_SHEET_CSV_URL, {
+                            download: true,
+                            header: true,
+                            skipEmptyLines: true,
+                            complete: function(results) {
+                                allQuestions = results.data
+                                    .filter(row => row['問題番号'] && row['問題文'])
+                                    .map(row => ({
+                                        questionNumber: (row['問題番号'] || '').trim(),
+                                        distributionNumber: (row['Question Distribution番号'] || '').trim(),
+                                        questionText: (row['問題文'] || '').trim(),
+                                        correctAnswer: (row['選択肢1(正解)'] || '').trim(),
+                                        option2: (row['選択肢2'] || '').trim(),
+                                        option3: (row['選択肢3'] || '').trim(),
+                                        option4: (row['選択肢4'] || '').trim(),
+                                        explanation: (row['解説'] || '解説はありません').trim()
+                                    }));
+                                
+                                validateAndStartQuiz(code, startBtn);
+                            },
+                            error: function(error) {
+                                console.error("Error:", error);
+                                alert('問題の読み込みに失敗しました');
+                                startBtn.disabled = false;
+                                startBtn.textContent = '試験を開始';
+                            }
+                        });
+                    } else {
+                        validateAndStartQuiz(code, startBtn);
+                    }
+                })
+                .catch(error => {
+                    alert('社員情報の取得に失敗しました: ' + error.message);
+                    startBtn.disabled = false;
+                    startBtn.textContent = '試験を開始';
+                });
+        }
+
+        // アクセスコード検証と試験開始
+        function validateAndStartQuiz(code, startBtn) {
+            fetch(`${GAS_API_URL}?action=load&code=${code}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error' || !data.accessCode) {
+                        alert(data.message || '有効なアクセスコードが設定されていません');
+                        startBtn.disabled = false;
+                        startBtn.textContent = '試験を開始';
+                        return;
+                    }
+
+                    currentMode = data.mode || 'Study';
+
+                    let selected = [];
+                    data.settings.forEach(s => {
+                        const filtered = allQuestions.filter(q => q.distributionNumber === s.distribution);
+                        const shuffled = filtered.sort(() => Math.random() - 0.5);
+                        selected.push(...shuffled.slice(0, s.count));
+                    });
+
+                    if (selected.length === 0) {
+                        alert('出題問題がありません');
+                        startBtn.disabled = false;
+                        startBtn.textContent = '試験を開始';
+                        return;
+                    }
+
+                    currentQuestions = selected.sort(() => Math.random() - 0.5).map(q => {
+                        const choices = [
+                            { text: q.correctAnswer, isCorrect: true },
+                            { text: q.option2, isCorrect: false },
+                            { text: q.option3, isCorrect: false },
+                            { text: q.option4, isCorrect: false }
+                        ].filter(c => c.text).sort(() => Math.random() - 0.5);
+                        return { ...q, choices };
+                    });
+
+                    currentIndex = 0;
+                    history = [];
+                    
+                    showScreen('quiz-screen');
+                    displayQuestion();
+                    
+                    startBtn.disabled = false;
+                    startBtn.textContent = '試験を開始';
+                })
+                .catch(error => {
+                    alert('サーバーとの通信に失敗しました: ' + error.message);
+                    startBtn.disabled = false;
+                    startBtn.textContent = '試験を開始';
+                });
         }
 
         // 問題表示
         function displayQuestion() {
-            const question = currentQuestions[currentIndex];
-            
-            document.getElementById('user-name-display').textContent = `受験者: ${userName}`;
+            const q = currentQuestions[currentIndex];
+            document.getElementById('user-name-display').textContent = `${employeeName} (${employeeId})`;
             document.getElementById('question-progress').textContent = `問題 ${currentIndex + 1} / ${currentQuestions.length}`;
-            document.getElementById('question-text').textContent = question.questionText;
+            document.getElementById('question-text').innerHTML = q.questionText.replace(/\n/g, '<br>');
             
-            const choicesDiv = document.getElementById('choices');
-            choicesDiv.innerHTML = '';
+            const div = document.getElementById('choices');
+            div.innerHTML = '';
             
-            question.choices.forEach((choice, index) => {
+            q.choices.forEach((choice, i) => {
                 const choiceDiv = document.createElement('div');
                 choiceDiv.className = 'choice';
-                choiceDiv.innerHTML = `<span>${choice.text}</span><span id="icon-${index}"></span>`;
-                choiceDiv.onclick = () => selectAnswer(index);
-                choicesDiv.appendChild(choiceDiv);
+                choiceDiv.innerHTML = `<span>${choice.text}</span><span id="icon-${i}"></span>`;
+                choiceDiv.onclick = () => selectAnswer(i);
+                div.appendChild(choiceDiv);
             });
             
             document.getElementById('explanation').classList.add('hidden');
@@ -690,54 +929,59 @@
 
         // 回答選択
         function selectAnswer(index) {
-            const question = currentQuestions[currentIndex];
+            const q = currentQuestions[currentIndex];
             const choices = document.querySelectorAll('.choice');
-            
-            // 既に回答済みなら無視
             if (choices[0].classList.contains('disabled')) return;
             
-            const selectedChoice = question.choices[index];
+            const selected = q.choices[index];
             
-            // 履歴に記録
+            // 履歴に解説も保存
             history.push({
-                userName: userName,
-                questionNumber: question.questionNumber,
-                distributionNumber: question.distributionNumber,
-                questionText: question.questionText,
-                selectedAnswer: selectedChoice.text,
-                correctAnswer: question.correctAnswer,
-                isCorrect: selectedChoice.isCorrect,
-                timestamp: new Date().toISOString()
+                questionNumber: q.questionNumber,
+                distributionNumber: q.distributionNumber,
+                questionText: q.questionText,
+                selectedAnswer: selected.text,
+                correctAnswer: q.correctAnswer,
+                isCorrect: selected.isCorrect,
+                explanation: q.explanation,
+                timestamp: getJSTTimestamp()
             });
-            
-            // 選択肢に結果を表示
-            choices.forEach((choiceDiv, i) => {
-                choiceDiv.classList.add('disabled');
-                const choice = question.choices[i];
-                const icon = document.getElementById(`icon-${i}`);
-                
-                if (i === index) {
-                    if (choice.isCorrect) {
-                        choiceDiv.classList.add('correct');
+
+            if (currentMode === 'Study') {
+                // Study Mode: 即座に正誤と解説を表示
+                choices.forEach((div, i) => {
+                    div.classList.add('disabled');
+                    const choice = q.choices[i];
+                    const icon = document.getElementById(`icon-${i}`);
+                    if (i === index) {
+                        div.classList.add(choice.isCorrect ? 'correct' : 'incorrect');
+                        icon.textContent = choice.isCorrect ? '✅' : '❌';
+                    } else if (choice.isCorrect) {
+                        div.classList.add('show-correct');
                         icon.textContent = '✅';
-                    } else {
-                        choiceDiv.classList.add('incorrect');
-                        icon.textContent = '❌';
                     }
-                } else if (choice.isCorrect) {
-                    choiceDiv.classList.add('show-correct');
-                    icon.textContent = '✅';
-                }
-            });
-            
-            // 解説表示
-            document.getElementById('explanation-text').textContent = question.explanation;
-            document.getElementById('explanation').classList.remove('hidden');
-            
-            // 次へボタン表示
-            const nextBtn = document.getElementById('next-btn');
-            nextBtn.textContent = currentIndex < currentQuestions.length - 1 ? '次の問題へ' : '結果を見る';
-            nextBtn.classList.remove('hidden');
+                });
+                
+                const explanationText = q.explanation.replace(/\n/g, '<br>');
+                document.getElementById('explanation-text').innerHTML = explanationText;
+                document.getElementById('explanation').classList.remove('hidden');
+                
+                const btn = document.getElementById('next-btn');
+                btn.textContent = currentIndex < currentQuestions.length - 1 ? '次の問題へ' : '結果を見る';
+                btn.classList.remove('hidden');
+            } else {
+                // Exam Mode: 正誤を表示せず次の問題へ
+                choices.forEach(div => div.classList.add('disabled'));
+                
+                setTimeout(() => {
+                    if (currentIndex < currentQuestions.length - 1) {
+                        currentIndex++;
+                        displayQuestion();
+                    } else {
+                        showExamResults();
+                    }
+                }, 500);
+            }
         }
 
         // 次の問題
@@ -746,71 +990,196 @@
                 currentIndex++;
                 displayQuestion();
             } else {
-                showResults();
+                if (currentMode === 'Study') {
+                    showResults();
+                } else {
+                    showExamResults();
+                }
             }
         }
 
-        // 結果表示
+        // Study Mode結果表示
         function showResults() {
-            const correctCount = history.filter(h => h.isCorrect).length;
-            const totalCount = history.length;
-            const accuracy = ((correctCount / totalCount) * 100).toFixed(1);
-            
-            document.getElementById('result-user-name').textContent = userName;
-            document.getElementById('correct-count').textContent = correctCount;
-            document.getElementById('total-count').textContent = totalCount;
-            document.getElementById('accuracy').textContent = accuracy;
-            
+            const correct = history.filter(h => h.isCorrect).length;
+            const total = history.length;
+            document.getElementById('result-employee-id').textContent = employeeId;
+            document.getElementById('result-user-name').textContent = employeeName;
+            document.getElementById('correct-count').textContent = correct;
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('accuracy').textContent = ((correct / total) * 100).toFixed(1);
             showScreen('result-screen');
+            
+            saveResultsToSheet('save-status');
         }
 
-        // 結果ダウンロード
-        function downloadResults() {
-            try {
-                const csvRows = [
-                    ['受験者名', '問題番号', 'Question Distribution番号', '問題文', '選択した回答', '正解', '正誤', '回答日時']
-                ];
+        // Exam Mode結果表示
+        function showExamResults() {
+            const correct = history.filter(h => h.isCorrect).length;
+            const total = history.length;
+            document.getElementById('exam-result-employee-id').textContent = employeeId;
+            document.getElementById('exam-result-user-name').textContent = employeeName;
+            document.getElementById('exam-correct-count').textContent = correct;
+            document.getElementById('exam-total-count').textContent = total;
+            document.getElementById('exam-accuracy').textContent = ((correct / total) * 100).toFixed(1);
+            
+            displayExamResultsList('all');
+            showScreen('exam-result-screen');
+            
+            saveResultsToSheet('exam-save-status');
+        }
 
-                history.forEach(h => {
-                    csvRows.push([
-                        h.userName || '',
-                        h.questionNumber || '',
-                        h.distributionNumber || '',
-                        (h.questionText || '').replace(/"/g, '""'),
-                        (h.selectedAnswer || '').replace(/"/g, '""'),
-                        (h.correctAnswer || '').replace(/"/g, '""'),
-                        h.isCorrect ? '正解' : '不正解',
-                        h.timestamp || ''
-                    ]);
-                });
-
-                const csvContent = csvRows.map(row => 
-                    row.map(cell => `"${cell}"`).join(',')
-                ).join('\n');
-
-                const bom = '\uFEFF';
-                const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `quiz_results_${userName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                alert('ダウンロードに失敗しました: ' + error.message);
+        // Exam Mode結果リスト表示
+        function displayExamResultsList(filter) {
+            const listDiv = document.getElementById('exam-results-list');
+            listDiv.innerHTML = '';
+            
+            let filteredHistory = history;
+            if (filter === 'incorrect') {
+                filteredHistory = history.filter(h => !h.isCorrect);
+            } else if (filter === 'correct') {
+                filteredHistory = history.filter(h => h.isCorrect);
             }
+            
+            filteredHistory.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'accordion-item';
+                itemDiv.dataset.filter = item.isCorrect ? 'correct' : 'incorrect';
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.className = `accordion-header ${item.isCorrect ? 'correct' : 'incorrect'}`;
+                headerDiv.innerHTML = `
+                    <div>
+                        <strong>問題 ${index + 1}</strong>: ${item.questionText.substring(0, 50)}${item.questionText.length > 50 ? '...' : ''}
+                    </div>
+                    <span>${item.isCorrect ? '✅ 正解' : '❌ 不正解'}</span>
+                `;
+                headerDiv.onclick = () => toggleAccordion(itemDiv);
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'accordion-content';
+                contentDiv.innerHTML = `
+                    <p><strong>問題:</strong><br>${item.questionText.replace(/\n/g, '<br>')}</p>
+                    <p style="margin-top: 10px;"><strong>あなたの回答:</strong> ${item.selectedAnswer}</p>
+                    <p style="color: #28a745;"><strong>正解:</strong> ${item.correctAnswer}</p>
+                    <div style="background: #e7f3ff; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                        <strong>📖 解説:</strong><br>
+                        ${item.explanation.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+                
+                itemDiv.appendChild(headerDiv);
+                itemDiv.appendChild(contentDiv);
+                listDiv.appendChild(itemDiv);
+            });
+        }
+
+        // アコーディオン開閉
+        function toggleAccordion(itemDiv) {
+            const content = itemDiv.querySelector('.accordion-content');
+            content.classList.toggle('active');
+        }
+
+        // 結果フィルター
+        function filterResults(filter) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            displayExamResultsList(filter);
+        }
+
+        // 間違えた問題を復習
+        function retryIncorrect() {
+            const incorrectQuestions = history
+                .filter(h => !h.isCorrect)
+                .map(h => {
+                    const original = currentQuestions.find(q => q.questionNumber === h.questionNumber);
+                    return original;
+                })
+                .filter(q => q);
+            
+            if (incorrectQuestions.length === 0) {
+                alert('間違えた問題はありません！');
+                return;
+            }
+            
+            currentQuestions = incorrectQuestions;
+            currentIndex = 0;
+            history = [];
+            currentMode = 'Study'; // 復習はStudy Modeで
+            
+            showScreen('quiz-screen');
+            displayQuestion();
+        }
+
+        // 結果を保存
+        function saveResultsToSheet(statusDivId) {
+            const statusDiv = document.getElementById(statusDivId);
+            const restartBtns = document.querySelectorAll('.btn-secondary');
+            
+            restartBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            });
+            
+            statusDiv.textContent = '結果を保存中...';
+            statusDiv.classList.remove('hidden');
+            
+            const formData = new FormData();
+            formData.append('action', 'saveResults');
+            formData.append('results', JSON.stringify(history));
+            formData.append('accessCode', currentAccessCode);
+            formData.append('employeeId', employeeId);
+            formData.append('mode', currentMode);
+            
+            const fetchWithRetry = (url, options, retries = 3) => {
+                return fetch(url, options)
+                    .then(response => {
+                        if (!response.ok && retries > 0) {
+                            return new Promise(resolve => setTimeout(resolve, 1000))
+                                .then(() => fetchWithRetry(url, options, retries - 1));
+                        }
+                        return response;
+                    });
+            };
+            
+            fetchWithRetry(GAS_API_URL, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        statusDiv.textContent = '✓ 結果がGoogleスプレッドシートに保存されました';
+                        statusDiv.style.color = '#28a745';
+                    } else {
+                        throw new Error(result.message || 'Unknown error');
+                    }
+                })
+                .catch(error => {
+                    statusDiv.textContent = '⚠ 結果の保存に失敗しました: ' + error.message;
+                    statusDiv.style.color = '#dc3545';
+                    console.error('Save error:', error);
+                })
+                .finally(() => {
+                    restartBtns.forEach(btn => {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                    });
+                });
         }
 
         // リスタート
         function restart() {
-            document.getElementById('user-name').value = '';
+            document.getElementById('employee-id').value = '';
             document.getElementById('access-code').value = '';
-            userName = '';
+            employeeId = '';
+            employeeName = '';
+            currentAccessCode = '';
             currentQuestions = [];
             currentIndex = 0;
             history = [];
+            currentMode = 'Study';
             showModeSelect();
         }
     </script>

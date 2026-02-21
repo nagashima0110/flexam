@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O.L.I.V.E</title>
+    <title>🫒O.L.I.V.E</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫒</text></svg>">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
@@ -81,6 +80,7 @@
 
         input[type="text"],
         input[type="password"],
+        input[type="number"],
         select {
             width: 100%;
             padding: 12px;
@@ -91,6 +91,7 @@
 
         input[type="text"]:focus,
         input[type="password"]:focus,
+        input[type="number"]:focus,
         select:focus {
             outline: none;
             border-color: #667eea;
@@ -162,29 +163,70 @@
             background: #e0a800;
         }
 
-        .distribution-list {
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+            padding: 10px 20px;
+            width: auto;
+            margin: 5px;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        /* Distribution選択用のグループスタイル */
+        .distribution-groups {
             margin-top: 20px;
         }
 
-        .distribution-item {
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        .distribution-group {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             padding: 15px;
             background: #f8f9fa;
-            border-radius: 6px;
+        }
+
+        .distribution-group-header {
+            font-weight: 600;
+            color: #667eea;
             margin-bottom: 10px;
+            font-size: 16px;
         }
 
-        .distribution-item select {
-            flex: 1;
-        }
-
-        .distribution-item input[type="number"] {
-            width: 100px;
+        .distribution-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding: 8px;
-            border: 1px solid #ddd;
+            margin-bottom: 8px;
+            background: white;
             border-radius: 6px;
+        }
+
+        .distribution-checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .distribution-checkbox-item label {
+            flex: 1;
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .distribution-checkbox-item input[type="number"] {
+            width: 80px;
+            padding: 6px;
+        }
+
+        .distribution-checkbox-item .time-display {
+            color: #666;
+            font-size: 14px;
+            white-space: nowrap;
         }
 
         .access-code-display {
@@ -355,6 +397,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .filter-btn {
@@ -419,6 +462,115 @@
             background: #667eea;
             color: white;
         }
+
+        /* タイマー表示 */
+        .timer-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 3px solid #dc3545;
+            border-radius: 12px;
+            padding: 15px 25px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc3545;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .timer-display.warning {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* 問題ナビゲーション */
+        .question-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .question-navigation .btn {
+            flex: 1;
+        }
+
+        /* 問題一覧グリッド */
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .question-grid-item {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            font-weight: 600;
+        }
+
+        .question-grid-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .question-grid-item.answered {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .question-grid-item.current {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* 時間制限設定 */
+        .time-limit-settings {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .time-limit-option {
+            margin-bottom: 10px;
+        }
+
+        .time-limit-option label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .time-limit-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .time-limit-option input[type="number"] {
+            width: 100px;
+            padding: 8px;
+            margin-left: 10px;
+        }
+
+        .estimated-time {
+            color: #28a745;
+            font-weight: 600;
+            font-size: 18px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -464,11 +616,8 @@
             </div>
 
             <div id="distribution-settings" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <label>出題設定(Distribution番号別)</label>
-                    <button class="btn btn-add" onclick="addDistribution()">➕ 追加</button>
-                </div>
-                <div id="distribution-list" class="distribution-list"></div>
+                <label>出題設定(Distribution番号別)</label>
+                <div id="distribution-groups" class="distribution-groups"></div>
                 <div id="total-questions" class="success-message hidden"></div>
             </div>
 
@@ -486,17 +635,40 @@
                 </div>
             </div>
 
+            <div id="time-limit-section" class="hidden time-limit-settings">
+                <label>制限時間設定 (Exam Modeのみ)</label>
+                <div class="time-limit-option">
+                    <label>
+                        <input type="radio" name="time-mode" value="estimated" checked onchange="updateTimeLimitDisplay()">
+                        想定時間を使用 (Distribution別の設定に基づく)
+                    </label>
+                </div>
+                <div class="time-limit-option">
+                    <label>
+                        <input type="radio" name="time-mode" value="custom" onchange="updateTimeLimitDisplay()">
+                        カスタム:
+                        <input type="number" id="custom-time-input" min="1" value="60" onchange="updateTimeLimitDisplay()"> 分
+                    </label>
+                </div>
+                <div class="time-limit-option">
+                    <label>
+                        <input type="radio" name="time-mode" value="none" onchange="updateTimeLimitDisplay()">
+                        制限時間なし
+                    </label>
+                </div>
+                <div class="estimated-time" id="time-display">想定時間: 0分</div>
+            </div>
+
             <button id="generate-code-btn" class="btn btn-primary hidden" onclick="generateAccessCode()">アクセスコードを生成</button>
             
             <div id="access-code-display" class="access-code-display hidden">
                 <p>生成されたアクセスコード:</p>
                 <div class="code" id="generated-code"></div>
                 <span class="mode-badge" id="generated-mode-badge"></span>
-                <p style="font-size: 12px; color: #666; margin-top: 10px;">このコードを受験者に共有してください</p>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;" id="generated-time-info"></p>
             </div>
         </div>
-
-        <!-- 受験者ログイン画面 -->
+<!-- 受験者ログイン画面 -->
         <div id="user-login-screen" class="hidden">
             <h2>受験者ログイン</h2>
             <div class="form-group">
@@ -513,7 +685,16 @@
 
         <!-- クイズ画面 (Study Mode & Exam Mode共通) -->
         <div id="quiz-screen" class="hidden">
+            <!-- タイマー表示 (Exam Modeのみ) -->
+            <div id="timer-display" class="timer-display hidden"></div>
+            
             <div class="question-card">
+                <!-- Exam Mode: 問題一覧グリッド -->
+                <div id="question-grid-container" class="hidden">
+                    <h3>問題一覧</h3>
+                    <div id="question-grid" class="question-grid"></div>
+                </div>
+                
                 <div class="question-header">
                     <span id="user-name-display"></span>
                     <span id="question-progress"></span>
@@ -524,7 +705,13 @@
                     <h4>📖 解説</h4>
                     <p id="explanation-text"></p>
                 </div>
-                <button id="next-btn" class="btn btn-primary hidden" onclick="nextQuestion()">次の問題へ</button>
+                
+                <!-- ナビゲーションボタン -->
+                <div class="question-navigation">
+                    <button id="prev-btn" class="btn btn-secondary" onclick="prevQuestion()" style="display:none;">← 前の問題</button>
+                    <button id="next-btn" class="btn btn-primary hidden" onclick="nextQuestion()">次の問題へ</button>
+                    <button id="submit-btn" class="btn btn-success hidden" onclick="confirmSubmit()">提出する</button>
+                </div>
             </div>
         </div>
 
@@ -570,21 +757,26 @@
     </div>
 
     <script>
-        // グローバル変数
-        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw24AlI3hPBVbPC93UE8u73BwWyxkw1xeaHvMJB4u4iMgN41tw9e0S8gQwbLn7rS9JL/exec';
+// グローバル変数
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyFMuN78y9uIw5UhpXjlg3GIsPEcofrz3IP3HNeaEPxfTC3BNF9LyBrxy73C5gM_oUA/exec';                             
         const ADMIN_PASSWORD = 'admin2024';
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6Z7pFKx1LXj_qoCJpnebvLCO6qPjOI_WNlKOWAv9UKK0Nm1nnY3WVFEDs9C8byDi8MCtHvNgMHJI5/pub?output=csv';
         
         let allQuestions = [];
         let distributionSettings = [];
+        let distributionTimeInfo = {}; // Distribution別の時間情報
         let currentQuestions = [];
         let currentIndex = 0;
         let history = [];
+        let answers = {}; // Exam Mode用: {questionIndex: {selectedIndex, isCorrect}}
         let employeeId = '';
         let employeeName = '';
         let currentAccessCode = '';
-        let selectedMode = 'Study'; // デフォルトはStudy Mode
-        let currentMode = 'Study'; // 実際の試験モード
+        let selectedMode = 'Study';
+        let currentMode = 'Study';
+        let timeLimit = null; // 制限時間(分)
+        let timerInterval = null;
+        let remainingSeconds = 0;
 
         // 日本時間(JST)を取得する関数
         function getJSTTimestamp() {
@@ -628,13 +820,28 @@
             
             if (mode === 'Study') {
                 document.getElementById('study-mode-btn').classList.add('selected');
+                document.getElementById('time-limit-section').classList.add('hidden');
             } else {
                 document.getElementById('exam-mode-btn').classList.add('selected');
+                document.getElementById('time-limit-section').classList.remove('hidden');
             }
+            updateTimeLimitDisplay();
         }
 
         // Googleスプレッドシートから問題読み込み
         function loadQuestionsFromSheet() {
+            // Distribution時間情報を取得
+            fetch(`${GAS_API_URL}?action=getDistributionTimes`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        distributionTimeInfo = data.timeInfo;
+                    }
+                })
+                .catch(error => {
+                    console.error('Distribution時間情報の取得に失敗:', error);
+                });
+
             Papa.parse(GOOGLE_SHEET_CSV_URL, {
                 download: true,
                 header: true,
@@ -657,7 +864,7 @@
                     document.getElementById('upload-success').classList.remove('hidden');
                     document.getElementById('distribution-settings').classList.remove('hidden');
                     document.getElementById('mode-selection').classList.remove('hidden');
-                    updateDistributionList();
+                    updateDistributionGroups();
                 },
                 error: function(error) {
                     console.error("Error:", error);
@@ -666,79 +873,138 @@
             });
         }
 
-        // Distribution設定
-        function addDistribution() {
-            distributionSettings.push({ distribution: '', count: 1 });
-            updateDistributionList();
-        }
-
-        function removeDistribution(index) {
-            distributionSettings.splice(index, 1);
-            updateDistributionList();
-        }
-
-        function updateDistributionList() {
+        // Distributionをグループ化して表示
+        function updateDistributionGroups() {
             const distributions = [...new Set(allQuestions.map(q => q.distributionNumber))].sort();
-            const listDiv = document.getElementById('distribution-list');
             
-            listDiv.innerHTML = '';
-            distributionSettings.forEach((setting, index) => {
-                const div = document.createElement('div');
-                div.className = 'distribution-item';
-                
-                const select = document.createElement('select');
-                select.innerHTML = '<option value="">Distribution番号を選択</option>';
-                distributions.forEach(dist => {
-                    const count = allQuestions.filter(q => q.distributionNumber === dist).length;
-                    const opt = document.createElement('option');
-                    opt.value = dist;
-                    opt.textContent = `${dist} (${count}問)`;
-                    if (dist === setting.distribution) opt.selected = true;
-                    select.appendChild(opt);
-                });
-                select.onchange = (e) => {
-                    distributionSettings[index].distribution = e.target.value;
-                    updateTotalQuestions();
-                };
-                
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.min = 1;
-                input.value = setting.count;
-                input.onchange = (e) => {
-                    distributionSettings[index].count = parseInt(e.target.value) || 1;
-                    updateTotalQuestions();
-                };
-                
-                const span = document.createElement('span');
-                span.textContent = '問';
-                
-                const btn = document.createElement('button');
-                btn.className = 'btn btn-danger';
-                btn.textContent = '🗑️';
-                btn.onclick = () => removeDistribution(index);
-                
-                div.append(select, input, span, btn);
-                listDiv.appendChild(div);
+            // グループ化 (最初の2文字でグループ分け)
+            const groups = {};
+            distributions.forEach(dist => {
+                const prefix = dist.substring(0, 2);
+                if (!groups[prefix]) groups[prefix] = [];
+                groups[prefix].push(dist);
             });
-            
-            updateTotalQuestions();
+
+            const container = document.getElementById('distribution-groups');
+            container.innerHTML = '';
+
+            Object.keys(groups).sort().forEach(groupName => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'distribution-group';
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'distribution-group-header';
+                headerDiv.textContent = `【${groupName}カテゴリー】`;
+                groupDiv.appendChild(headerDiv);
+
+                groups[groupName].forEach(dist => {
+                    const count = allQuestions.filter(q => q.distributionNumber === dist).length;
+                    const timePerQ = distributionTimeInfo[dist] || 3;
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'distribution-checkbox-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `dist-${dist}`;
+                    checkbox.value = dist;
+                    checkbox.onchange = updateDistributionSettings;
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `dist-${dist}`;
+                    label.textContent = `${dist} (${count}問)`;
+                    
+                    const countInput = document.createElement('input');
+                    countInput.type = 'number';
+                    countInput.min = 1;
+                    countInput.max = count;
+                    countInput.value = count;
+                    countInput.id = `count-${dist}`;
+                    countInput.onchange = updateDistributionSettings;
+                    
+                    const countLabel = document.createElement('span');
+                    countLabel.textContent = '問';
+                    
+                    const timeDisplay = document.createElement('span');
+                    timeDisplay.className = 'time-display';
+                    timeDisplay.id = `time-${dist}`;
+                    timeDisplay.textContent = `(${timePerQ}分/問)`;
+                    
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(label);
+                    itemDiv.appendChild(countInput);
+                    itemDiv.appendChild(countLabel);
+                    itemDiv.appendChild(timeDisplay);
+                    
+                    groupDiv.appendChild(itemDiv);
+                });
+
+                container.appendChild(groupDiv);
+            });
+
+            updateDistributionSettings();
         }
 
-        function updateTotalQuestions() {
-            const total = distributionSettings.reduce((sum, s) => {
-                const available = allQuestions.filter(q => q.distributionNumber === s.distribution).length;
-                return sum + Math.min(s.count, available);
-            }, 0);
-            
-            const div = document.getElementById('total-questions');
-            if (total > 0) {
-                div.textContent = `合計出題数: ${total}問`;
-                div.classList.remove('hidden');
+        // Distribution設定を更新
+        function updateDistributionSettings() {
+            distributionSettings = [];
+            let totalQuestions = 0;
+            let estimatedTime = 0;
+
+            const checkboxes = document.querySelectorAll('.distribution-checkbox-item input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    const dist = cb.value;
+                    const countInput = document.getElementById(`count-${dist}`);
+                    const count = parseInt(countInput.value) || 1;
+                    const timePerQ = distributionTimeInfo[dist] || 3;
+                    
+                    distributionSettings.push({
+                        distribution: dist,
+                        count: count
+                    });
+                    
+                    totalQuestions += count;
+                    estimatedTime += count * timePerQ;
+                }
+            });
+
+            const totalDiv = document.getElementById('total-questions');
+            if (totalQuestions > 0) {
+                totalDiv.textContent = `合計出題数: ${totalQuestions}問`;
+                totalDiv.classList.remove('hidden');
                 document.getElementById('generate-code-btn').classList.remove('hidden');
             } else {
-                div.classList.add('hidden');
+                totalDiv.classList.add('hidden');
                 document.getElementById('generate-code-btn').classList.add('hidden');
+            }
+
+            // 想定時間を更新
+            updateTimeLimitDisplay(estimatedTime);
+        }
+
+        // 制限時間表示を更新
+        function updateTimeLimitDisplay(estimatedTime) {
+            if (!estimatedTime) {
+                estimatedTime = 0;
+                distributionSettings.forEach(s => {
+                    const timePerQ = distributionTimeInfo[s.distribution] || 3;
+                    estimatedTime += s.count * timePerQ;
+                });
+            }
+
+            const timeMode = document.querySelector('input[name="time-mode"]:checked')?.value || 'estimated';
+            const customTime = parseInt(document.getElementById('custom-time-input').value) || 60;
+            const timeDisplay = document.getElementById('time-display');
+
+            if (selectedMode === 'Study') {
+                timeDisplay.textContent = '制限時間: なし (Study Mode)';
+            } else if (timeMode === 'none') {
+                timeDisplay.textContent = '制限時間: なし';
+            } else if (timeMode === 'estimated') {
+                timeDisplay.textContent = `想定時間: ${estimatedTime}分`;
+            } else if (timeMode === 'custom') {
+                timeDisplay.textContent = `制限時間: ${customTime}分`;
             }
         }
 
@@ -749,11 +1015,27 @@
                 return;
             }
 
+            // 制限時間を取得
+            let finalTimeLimit = null;
+            if (selectedMode === 'Exam') {
+                const timeMode = document.querySelector('input[name="time-mode"]:checked')?.value || 'estimated';
+                if (timeMode === 'estimated') {
+                    finalTimeLimit = 0;
+                    distributionSettings.forEach(s => {
+                        const timePerQ = distributionTimeInfo[s.distribution] || 3;
+                        finalTimeLimit += s.count * timePerQ;
+                    });
+                } else if (timeMode === 'custom') {
+                    finalTimeLimit = parseInt(document.getElementById('custom-time-input').value) || 60;
+                }
+            }
+
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
             const data = {
                 accessCode: code,
                 settings: distributionSettings.map(s => ({ distribution: s.distribution, count: s.count })),
-                mode: selectedMode
+                mode: selectedMode,
+                timeLimit: finalTimeLimit
             };
 
             document.getElementById('generate-code-btn').disabled = true;
@@ -770,6 +1052,14 @@
                         const badge = document.getElementById('generated-mode-badge');
                         badge.textContent = selectedMode + ' Mode';
                         badge.className = 'mode-badge ' + (selectedMode === 'Study' ? 'study' : 'exam');
+                        
+                        const timeInfo = document.getElementById('generated-time-info');
+                        if (finalTimeLimit) {
+                            timeInfo.textContent = `制限時間: ${finalTimeLimit}分`;
+                        } else {
+                            timeInfo.textContent = selectedMode === 'Exam' ? '制限時間: なし' : '';
+                        }
+                        
                         alert(`アクセスコード ${code} (${selectedMode} Mode) が保存されました`);
                     } else {
                         throw new Error(result.message);
@@ -800,7 +1090,6 @@
             startBtn.disabled = true;
             startBtn.textContent = '認証中...';
 
-            // 社員情報を取得
             fetch(`${GAS_API_URL}?action=getEmployee&employeeId=${employeeId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -867,6 +1156,7 @@
                     }
 
                     currentMode = data.mode || 'Study';
+                    timeLimit = data.timeLimit;
 
                     let selected = [];
                     data.settings.forEach(s => {
@@ -894,6 +1184,19 @@
 
                     currentIndex = 0;
                     history = [];
+                    answers = {};
+                    
+                    // Exam Modeの場合、タイマーと問題一覧を表示
+                    if (currentMode === 'Exam') {
+                        document.getElementById('question-grid-container').classList.remove('hidden');
+                        updateQuestionGrid();
+                        
+                        if (timeLimit && timeLimit > 0) {
+                            startTimer(timeLimit * 60);
+                        }
+                    } else {
+                        document.getElementById('question-grid-container').classList.add('hidden');
+                    }
                     
                     showScreen('quiz-screen');
                     displayQuestion();
@@ -906,6 +1209,66 @@
                     startBtn.disabled = false;
                     startBtn.textContent = '試験を開始';
                 });
+        }
+
+        // タイマー開始
+        function startTimer(seconds) {
+            remainingSeconds = seconds;
+            const timerDisplay = document.getElementById('timer-display');
+            timerDisplay.classList.remove('hidden');
+            
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateTimerDisplay();
+                
+                if (remainingSeconds <= 300 && remainingSeconds > 0) {
+                    timerDisplay.classList.add('warning');
+                }
+                
+                if (remainingSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    alert('制限時間終了！自動的に提出されます。');
+                    forceSubmit();
+                }
+            }, 1000);
+        }
+
+        // タイマー表示更新
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            document.getElementById('timer-display').textContent = 
+                `残り ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 問題一覧グリッド更新
+        function updateQuestionGrid() {
+            const grid = document.getElementById('question-grid');
+            grid.innerHTML = '';
+            
+            currentQuestions.forEach((q, index) => {
+                const item = document.createElement('div');
+                item.className = 'question-grid-item';
+                item.textContent = index + 1;
+                
+                if (answers[index]) {
+                    item.classList.add('answered');
+                }
+                if (index === currentIndex) {
+                    item.classList.add('current');
+                }
+                
+                item.onclick = () => jumpToQuestion(index);
+                grid.appendChild(item);
+            });
+        }
+
+        // 指定の問題にジャンプ
+        function jumpToQuestion(index) {
+            currentIndex = index;
+            displayQuestion();
         }
 
         // 問題表示
@@ -921,34 +1284,90 @@
             q.choices.forEach((choice, i) => {
                 const choiceDiv = document.createElement('div');
                 choiceDiv.className = 'choice';
+                
+                // Exam Modeで既に回答済みの場合、選択状態を復元
+                if (currentMode === 'Exam' && answers[currentIndex]) {
+                    if (answers[currentIndex].selectedIndex === i) {
+                        choiceDiv.classList.add('disabled');
+                        choiceDiv.style.background = '#e3f2fd';
+                    }
+                } else if (currentMode === 'Study' && answers[currentIndex]) {
+                    choiceDiv.classList.add('disabled');
+                }
+                
                 choiceDiv.innerHTML = `<span>${choice.text}</span><span id="icon-${i}"></span>`;
                 choiceDiv.onclick = () => selectAnswer(i);
                 div.appendChild(choiceDiv);
             });
             
-            document.getElementById('explanation').classList.add('hidden');
-            document.getElementById('next-btn').classList.add('hidden');
+            // Study Modeで既に回答済みの場合、解説を表示
+            if (currentMode === 'Study' && answers[currentIndex]) {
+                showExplanationForStudyMode();
+            } else {
+                document.getElementById('explanation').classList.add('hidden');
+            }
+            
+            // ボタンの表示制御
+            updateNavigationButtons();
+            
+            // Exam Modeの問題一覧を更新
+            if (currentMode === 'Exam') {
+                updateQuestionGrid();
+            }
+        }
+
+        // ナビゲーションボタンの表示更新
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            // 前の問題ボタン
+            if (currentMode === 'Exam' && currentIndex > 0) {
+                prevBtn.style.display = 'block';
+            } else {
+                prevBtn.style.display = 'none';
+            }
+            
+            // 次の問題/提出ボタン
+            if (currentMode === 'Study') {
+                // Study Modeでは回答後のみ表示
+                if (answers[currentIndex]) {
+                    nextBtn.classList.remove('hidden');
+                    submitBtn.classList.add('hidden');
+                    nextBtn.textContent = currentIndex < currentQuestions.length - 1 ? '次の問題へ →' : '結果を見る';
+                } else {
+                    nextBtn.classList.add('hidden');
+                    submitBtn.classList.add('hidden');
+                }
+            } else {
+                // Exam Mode
+                if (currentIndex < currentQuestions.length - 1) {
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.textContent = '次の問題へ →';
+                    submitBtn.classList.add('hidden');
+                } else {
+                    nextBtn.classList.add('hidden');
+                    submitBtn.classList.remove('hidden');
+                }
+            }
         }
 
         // 回答選択
         function selectAnswer(index) {
             const q = currentQuestions[currentIndex];
             const choices = document.querySelectorAll('.choice');
-            if (choices[0].classList.contains('disabled')) return;
+            
+            // 既に回答済みの場合は何もしない
+            if (answers[currentIndex]) return;
             
             const selected = q.choices[index];
             
-            // 履歴に解説も保存
-            history.push({
-                questionNumber: q.questionNumber,
-                distributionNumber: q.distributionNumber,
-                questionText: q.questionText,
-                selectedAnswer: selected.text,
-                correctAnswer: q.correctAnswer,
-                isCorrect: selected.isCorrect,
-                explanation: q.explanation,
-                timestamp: getJSTTimestamp()
-            });
+            // 回答を記録
+            answers[currentIndex] = {
+                selectedIndex: index,
+                isCorrect: selected.isCorrect
+            };
 
             if (currentMode === 'Study') {
                 // Study Mode: 即座に正誤と解説を表示
@@ -965,29 +1384,48 @@
                     }
                 });
                 
-                const explanationText = q.explanation.replace(/\n/g, '<br>');
-                document.getElementById('explanation-text').innerHTML = explanationText;
-                document.getElementById('explanation').classList.remove('hidden');
-                
-                const btn = document.getElementById('next-btn');
-                btn.textContent = currentIndex < currentQuestions.length - 1 ? '次の問題へ' : '結果を見る';
-                btn.classList.remove('hidden');
+                showExplanationForStudyMode();
+                updateNavigationButtons();
             } else {
-                // Exam Mode: 正誤を表示せず次の問題へ
-                choices.forEach(div => div.classList.add('disabled'));
+                // Exam Mode: 選択状態のみ表示
+                choices.forEach((div, i) => {
+                    if (i === index) {
+                        div.style.background = '#e3f2fd';
+                    }
+                    div.classList.add('disabled');
+                });
                 
-                setTimeout(() => {
-                    if (currentIndex < currentQuestions.length - 1) {
+                updateQuestionGrid();
+                
+                // 自動的に次の問題へ（最後の問題以外）
+                if (currentIndex < currentQuestions.length - 1) {
+                    setTimeout(() => {
                         currentIndex++;
                         displayQuestion();
-                    } else {
-                        showExamResults();
-                    }
-                }, 500);
+                    }, 300);
+                } else {
+                    updateNavigationButtons();
+                }
             }
         }
 
-        // 次の問題
+        // Study Mode用の解説表示
+        function showExplanationForStudyMode() {
+            const q = currentQuestions[currentIndex];
+            const explanationText = q.explanation.replace(/\n/g, '<br>');
+            document.getElementById('explanation-text').innerHTML = explanationText;
+            document.getElementById('explanation').classList.remove('hidden');
+        }
+
+        // 前の問題へ
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                displayQuestion();
+            }
+        }
+
+        // 次の問題へ
         function nextQuestion() {
             if (currentIndex < currentQuestions.length - 1) {
                 currentIndex++;
@@ -996,13 +1434,73 @@
                 if (currentMode === 'Study') {
                     showResults();
                 } else {
-                    showExamResults();
+                    confirmSubmit();
                 }
             }
         }
 
+        // 提出確認
+        function confirmSubmit() {
+            const unansweredCount = currentQuestions.length - Object.keys(answers).length;
+            
+            let message = `提出してもよろしいですか？\n\n`;
+            message += `回答済み: ${Object.keys(answers).length}問 / 全${currentQuestions.length}問\n`;
+            if (unansweredCount > 0) {
+                message += `未回答: ${unansweredCount}問`;
+            }
+            
+            if (confirm(message)) {
+                forceSubmit();
+            }
+        }
+
+        // 強制提出
+        function forceSubmit() {
+            // タイマー停止
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            // 全問題の履歴を作成
+            currentQuestions.forEach((q, index) => {
+                const answer = answers[index];
+                const selected = answer ? q.choices[answer.selectedIndex] : null;
+                
+                history.push({
+                    questionNumber: q.questionNumber,
+                    distributionNumber: q.distributionNumber,
+                    questionText: q.questionText,
+                    selectedAnswer: selected ? selected.text : '未回答',
+                    correctAnswer: q.correctAnswer,
+                    isCorrect: answer ? answer.isCorrect : false,
+                    explanation: q.explanation,
+                    timestamp: getJSTTimestamp()
+                });
+            });
+            
+            showExamResults();
+        }
+
         // Study Mode結果表示
         function showResults() {
+            // 履歴を作成
+            currentQuestions.forEach((q, index) => {
+                const answer = answers[index];
+                if (answer) {
+                    const selected = q.choices[answer.selectedIndex];
+                    history.push({
+                        questionNumber: q.questionNumber,
+                        distributionNumber: q.distributionNumber,
+                        questionText: q.questionText,
+                        selectedAnswer: selected.text,
+                        correctAnswer: q.correctAnswer,
+                        isCorrect: answer.isCorrect,
+                        explanation: q.explanation,
+                        timestamp: getJSTTimestamp()
+                    });
+                }
+            });
+            
             const correct = history.filter(h => h.isCorrect).length;
             const total = history.length;
             document.getElementById('result-employee-id').textContent = employeeId;
@@ -1046,13 +1544,12 @@
             filteredHistory.forEach((item, index) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'accordion-item';
-                itemDiv.dataset.filter = item.isCorrect ? 'correct' : 'incorrect';
                 
                 const headerDiv = document.createElement('div');
                 headerDiv.className = `accordion-header ${item.isCorrect ? 'correct' : 'incorrect'}`;
                 headerDiv.innerHTML = `
                     <div>
-                        <strong>問題 ${index + 1}</strong>: ${item.questionText.substring(0, 50)}${item.questionText.length > 50 ? '...' : ''}
+                        <strong>問題 ${history.indexOf(item) + 1}</strong>: ${item.questionText.substring(0, 50)}${item.questionText.length > 50 ? '...' : ''}
                     </div>
                     <span>${item.isCorrect ? '✅ 正解' : '❌ 不正解'}</span>
                 `;
@@ -1091,25 +1588,28 @@
 
         // 間違えた問題を復習
         function retryIncorrect() {
-            const incorrectQuestions = history
-                .filter(h => !h.isCorrect)
-                .map(h => {
-                    const original = currentQuestions.find(q => q.questionNumber === h.questionNumber);
-                    return original;
-                })
-                .filter(q => q);
+            const incorrectIndices = [];
+            history.forEach((h, index) => {
+                if (!h.isCorrect) {
+                    incorrectIndices.push(index);
+                }
+            });
             
-            if (incorrectQuestions.length === 0) {
+            if (incorrectIndices.length === 0) {
                 alert('間違えた問題はありません！');
                 return;
             }
             
+            const incorrectQuestions = incorrectIndices.map(i => currentQuestions[i]);
+            
             currentQuestions = incorrectQuestions;
             currentIndex = 0;
             history = [];
-            currentMode = 'Study'; // 復習はStudy Modeで
+            answers = {};
+            currentMode = 'Study';
             
             showScreen('quiz-screen');
+            document.getElementById('question-grid-container').classList.add('hidden');
             displayQuestion();
         }
 
@@ -1174,6 +1674,10 @@
 
         // リスタート
         function restart() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            document.getElementById('timer-display').classList.add('hidden');
             document.getElementById('employee-id').value = '';
             document.getElementById('access-code').value = '';
             employeeId = '';
@@ -1182,7 +1686,9 @@
             currentQuestions = [];
             currentIndex = 0;
             history = [];
+            answers = {};
             currentMode = 'Study';
+            timeLimit = null;
             showModeSelect();
         }
     </script>

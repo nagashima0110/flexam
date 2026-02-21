@@ -1652,7 +1652,7 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.status === 'success') {
-                        statusDiv.textContent = '✓ 結果がGoogleスプレッドシートに保存されました';
+                        statusDiv.textContent = '✓ 結果が送信されました';
                         statusDiv.style.color = '#28a745';
                     } else {
                         throw new Error(result.message || 'Unknown error');

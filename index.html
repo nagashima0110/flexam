@@ -571,6 +571,82 @@
             font-size: 18px;
             margin-top: 10px;
         }
+
+        /* スマホ対応 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .question-navigation {
+                flex-direction: column;
+            }
+            
+            .question-navigation .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            #prev-btn, #next-btn, #submit-btn {
+                width: 100% !important;
+            }
+            
+            .mode-select {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-select-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 8px;
+            }
+            
+            .question-grid-item {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            .question-text {
+                font-size: 18px;
+            }
+            
+            .choice {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            .timer-display {
+                top: 10px;
+                right: 10px;
+                padding: 10px 15px;
+                font-size: 18px;
+            }
+            
+            .distribution-checkbox-item {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .distribution-checkbox-item input[type="number"] {
+                width: 60px;
+            }
+            
+            .filter-buttons {
+                flex-direction: column;
+            }
+            
+            .filter-btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -689,12 +765,6 @@
             <div id="timer-display" class="timer-display hidden"></div>
             
             <div class="question-card">
-                <!-- Exam Mode: 問題一覧グリッド -->
-                <div id="question-grid-container" class="hidden">
-                    <h3>問題一覧</h3>
-                    <div id="question-grid" class="question-grid"></div>
-                </div>
-                
                 <div class="question-header">
                     <span id="user-name-display"></span>
                     <span id="question-progress"></span>
@@ -711,6 +781,12 @@
                     <button id="prev-btn" class="btn btn-secondary" onclick="prevQuestion()" style="display:none;">← 前の問題</button>
                     <button id="next-btn" class="btn btn-primary hidden" onclick="nextQuestion()">次の問題へ</button>
                     <button id="submit-btn" class="btn btn-success hidden" onclick="confirmSubmit()">提出する</button>
+                </div>
+                
+                <!-- Exam Mode: 問題一覧グリッド（下部に移動） -->
+                <div id="question-grid-container" class="hidden" style="margin-top: 30px;">
+                    <h3>問題一覧</h3>
+                    <div id="question-grid" class="question-grid"></div>
                 </div>
             </div>
         </div>
@@ -830,7 +906,7 @@
 
         // Googleスプレッドシートから問題読み込み
         function loadQuestionsFromSheet() {
-            // Distribution時間情報を取得
+            // まずDistribution時間情報を取得し、完了後に問題を読み込む
             fetch(`${GAS_API_URL}?action=getDistributionTimes`)
                 .then(response => response.json())
                 .then(data => {
@@ -840,37 +916,39 @@
                 })
                 .catch(error => {
                     console.error('Distribution時間情報の取得に失敗:', error);
+                })
+                .finally(() => {
+                    // fetchの成否に関わらず、完了後にPapa.parseを実行
+                    Papa.parse(GOOGLE_SHEET_CSV_URL, {
+                        download: true,
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            allQuestions = results.data
+                                .filter(row => row['問題番号'] && row['問題文'])
+                                .map(row => ({
+                                    questionNumber: (row['問題番号'] || '').trim(),
+                                    distributionNumber: (row['Question Distribution番号'] || '').trim(),
+                                    questionText: (row['問題文'] || '').trim(),
+                                    correctAnswer: (row['選択肢1(正解)'] || '').trim(),
+                                    option2: (row['選択肢2'] || '').trim(),
+                                    option3: (row['選択肢3'] || '').trim(),
+                                    option4: (row['選択肢4'] || '').trim(),
+                                    explanation: (row['解説'] || '解説はありません').trim()
+                                }));
+                            
+                            document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み`;
+                            document.getElementById('upload-success').classList.remove('hidden');
+                            document.getElementById('distribution-settings').classList.remove('hidden');
+                            document.getElementById('mode-selection').classList.remove('hidden');
+                            updateDistributionGroups();
+                        },
+                        error: function(error) {
+                            console.error("Error:", error);
+                            alert('データ読み込みに失敗しました');
+                        }
+                    });
                 });
-
-            Papa.parse(GOOGLE_SHEET_CSV_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    allQuestions = results.data
-                        .filter(row => row['問題番号'] && row['問題文'])
-                        .map(row => ({
-                            questionNumber: (row['問題番号'] || '').trim(),
-                            distributionNumber: (row['Question Distribution番号'] || '').trim(),
-                            questionText: (row['問題文'] || '').trim(),
-                            correctAnswer: (row['選択肢1(正解)'] || '').trim(),
-                            option2: (row['選択肢2'] || '').trim(),
-                            option3: (row['選択肢3'] || '').trim(),
-                            option4: (row['選択肢4'] || '').trim(),
-                            explanation: (row['解説'] || '解説はありません').trim()
-                        }));
-                    
-                    document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み`;
-                    document.getElementById('upload-success').classList.remove('hidden');
-                    document.getElementById('distribution-settings').classList.remove('hidden');
-                    document.getElementById('mode-selection').classList.remove('hidden');
-                    updateDistributionGroups();
-                },
-                error: function(error) {
-                    console.error("Error:", error);
-                    alert('データ読み込みに失敗しました');
-                }
-            });
         }
 
         // Distributionをグループ化して表示
@@ -1652,7 +1730,7 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.status === 'success') {
-                        statusDiv.textContent = '✓ 結果が送信されました';
+                        statusDiv.textContent = '✓ 結果がGoogleスプレッドシートに保存されました';
                         statusDiv.style.color = '#28a745';
                     } else {
                         throw new Error(result.message || 'Unknown error');

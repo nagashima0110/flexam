@@ -1363,10 +1363,9 @@
                 const choiceDiv = document.createElement('div');
                 choiceDiv.className = 'choice';
                 
-                // Exam Modeで既に回答済みの場合、選択状態を復元
+                // Exam Modeで既に回答済みの場合、選択状態を復元（変更可能なのでdisabledは付けない）
                 if (currentMode === 'Exam' && answers[currentIndex]) {
                     if (answers[currentIndex].selectedIndex === i) {
-                        choiceDiv.classList.add('disabled');
                         choiceDiv.style.background = '#e3f2fd';
                     }
                 } else if (currentMode === 'Study' && answers[currentIndex]) {
@@ -1435,12 +1434,13 @@
         function selectAnswer(index) {
             const q = currentQuestions[currentIndex];
             const choices = document.querySelectorAll('.choice');
-            
-            // 既に回答済みの場合は何もしない
-            if (answers[currentIndex]) return;
-            
+
+            // Study Mode: 既に回答済みの場合は何もしない
+            if (currentMode === 'Study' && answers[currentIndex]) return;
+
+            const isReAnswer = !!answers[currentIndex];
             const selected = q.choices[index];
-            
+
             // 回答を記録
             answers[currentIndex] = {
                 selectedIndex: index,
@@ -1461,22 +1461,23 @@
                         icon.textContent = '✅';
                     }
                 });
-                
+
                 showExplanationForStudyMode();
                 updateNavigationButtons();
             } else {
-                // Exam Mode: 選択状態のみ表示
+                // Exam Mode: 選択状態のみ表示（再回答時は前の選択をリセット）
                 choices.forEach((div, i) => {
+                    div.style.background = '';
                     if (i === index) {
                         div.style.background = '#e3f2fd';
                     }
                     div.classList.add('disabled');
                 });
-                
+
                 updateQuestionGrid();
-                
-                // 自動的に次の問題へ（最後の問題以外）
-                if (currentIndex < currentQuestions.length - 1) {
+
+                // 自動的に次の問題へ（最後の問題以外、かつ再回答でない場合）
+                if (!isReAnswer && currentIndex < currentQuestions.length - 1) {
                     setTimeout(() => {
                         currentIndex++;
                         displayQuestion();

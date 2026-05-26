@@ -904,10 +904,30 @@
             updateTimeLimitDisplay();
         }
 
-        // Googleスプレッドシートから問題読み込み
+        // CSVテキストを問題データに変換（共通処理）
+        function parseQuestionsFromCSV(csvText) {
+            const results = Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true
+            });
+            return results.data
+                .filter(row => row['問題番号'] && row['問題文'])
+                .map(row => ({
+                    questionNumber: (row['問題番号'] || '').trim(),
+                    distributionNumber: (row['Question Distribution番号'] || '').trim(),
+                    questionText: (row['問題文'] || '').trim(),
+                    correctAnswer: (row['選択肢1(正解)'] || '').trim(),
+                    option2: (row['選択肢2'] || '').trim(),
+                    option3: (row['選択肢3'] || '').trim(),
+                    option4: (row['選択肢4'] || '').trim(),
+                    explanation: (row['解説'] || '解説はありません').trim()
+                }));
+        }
+
+        // Googleスプレッドシートから問題読み込み（GAS経由でSSL問題を回避）
         function loadQuestionsFromSheet() {
-            // まずDistribution時間情報を取得し、完了後に問題を読み込む
-            fetch(`${GAS_API_URL}?action=getDistributionTimes`)
+            // Distribution時間情報と問題CSVを並行取得
+            const timesPromise = fetch(`${GAS_API_URL}?action=getDistributionTimes`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
@@ -916,38 +936,26 @@
                 })
                 .catch(error => {
                     console.error('Distribution時間情報の取得に失敗:', error);
+                });
+
+            const questionsPromise = fetch(`${GAS_API_URL}?action=getQuestions`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== 'success') throw new Error(data.message || '問題取得失敗');
+                    allQuestions = parseQuestionsFromCSV(data.csv);
+                });
+
+            Promise.all([timesPromise, questionsPromise])
+                .then(() => {
+                    document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み`;
+                    document.getElementById('upload-success').classList.remove('hidden');
+                    document.getElementById('distribution-settings').classList.remove('hidden');
+                    document.getElementById('mode-selection').classList.remove('hidden');
+                    updateDistributionGroups();
                 })
-                .finally(() => {
-                    // fetchの成否に関わらず、完了後にPapa.parseを実行
-                    Papa.parse(GOOGLE_SHEET_CSV_URL, {
-                        download: true,
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: function(results) {
-                            allQuestions = results.data
-                                .filter(row => row['問題番号'] && row['問題文'])
-                                .map(row => ({
-                                    questionNumber: (row['問題番号'] || '').trim(),
-                                    distributionNumber: (row['Question Distribution番号'] || '').trim(),
-                                    questionText: (row['問題文'] || '').trim(),
-                                    correctAnswer: (row['選択肢1(正解)'] || '').trim(),
-                                    option2: (row['選択肢2'] || '').trim(),
-                                    option3: (row['選択肢3'] || '').trim(),
-                                    option4: (row['選択肢4'] || '').trim(),
-                                    explanation: (row['解説'] || '解説はありません').trim()
-                                }));
-                            
-                            document.getElementById('upload-success').textContent = `✓ ${allQuestions.length}問読み込み済み`;
-                            document.getElementById('upload-success').classList.remove('hidden');
-                            document.getElementById('distribution-settings').classList.remove('hidden');
-                            document.getElementById('mode-selection').classList.remove('hidden');
-                            updateDistributionGroups();
-                        },
-                        error: function(error) {
-                            console.error("Error:", error);
-                            alert('データ読み込みに失敗しました');
-                        }
-                    });
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert('データ読み込みに失敗しました');
                 });
         }
 
@@ -1183,33 +1191,19 @@
 
                     if (allQuestions.length === 0) {
                         startBtn.textContent = '問題読み込み中...';
-                        Papa.parse(GOOGLE_SHEET_CSV_URL, {
-                            download: true,
-                            header: true,
-                            skipEmptyLines: true,
-                            complete: function(results) {
-                                allQuestions = results.data
-                                    .filter(row => row['問題番号'] && row['問題文'])
-                                    .map(row => ({
-                                        questionNumber: (row['問題番号'] || '').trim(),
-                                        distributionNumber: (row['Question Distribution番号'] || '').trim(),
-                                        questionText: (row['問題文'] || '').trim(),
-                                        correctAnswer: (row['選択肢1(正解)'] || '').trim(),
-                                        option2: (row['選択肢2'] || '').trim(),
-                                        option3: (row['選択肢3'] || '').trim(),
-                                        option4: (row['選択肢4'] || '').trim(),
-                                        explanation: (row['解説'] || '解説はありません').trim()
-                                    }));
-                                
+                        fetch(`${GAS_API_URL}?action=getQuestions`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status !== 'success') throw new Error(data.message || '問題取得失敗');
+                                allQuestions = parseQuestionsFromCSV(data.csv);
                                 validateAndStartQuiz(code, startBtn);
-                            },
-                            error: function(error) {
+                            })
+                            .catch(error => {
                                 console.error("Error:", error);
                                 alert('問題の読み込みに失敗しました');
                                 startBtn.disabled = false;
                                 startBtn.textContent = '試験を開始';
-                            }
-                        });
+                            });
                     } else {
                         validateAndStartQuiz(code, startBtn);
                     }
